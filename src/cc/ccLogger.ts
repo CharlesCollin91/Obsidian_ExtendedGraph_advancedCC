@@ -11,7 +11,7 @@ import * as fs from "fs";
 import * as path from "path";
 import type { EGSettingsView, FeatureFlags, GraphViewLike } from "./ccTypes";
 
-export const CC_VERSION = "1.15.0";
+export const CC_VERSION = "1.16.0";
 
 type Level = "INIT" | "INFO" | "VIEW" | "ENABLE" | "DISABLE" | "NOTICE" | "WARN" | "ERROR" | "TEST" | "CLOSE";
 

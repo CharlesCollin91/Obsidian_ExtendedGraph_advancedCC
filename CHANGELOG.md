@@ -3,6 +3,11 @@
 All notable changes to ExtendedGraph_advancedCC. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Based on Extended Graph 2.7.6 (upstream commit `c1aab34`).
 
+## [1.16.0] - 2026-10-27
+### Changed
+- Node Repartition: Obsidian's native "Node size" slider is hidden and kept at its default (1), so node size is
+  controlled only by Node Weight's "Base node size" (also when a graph state saved another value).
+
 ## [1.15.0] - 2026-10-27
 ### Changed
 - Plugin renamed **ExtendedGraph_advancedCC** (id `extendedgraph-advancedcc`), matching the repository name.

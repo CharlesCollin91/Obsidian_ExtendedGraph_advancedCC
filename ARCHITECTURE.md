@@ -25,7 +25,7 @@ ExtendedGraph_advancedCC keeps all of it and adds its own layer, kept **separate
 | `ccCompact.ts` | `CCCompact`: compact mode and pins of the settings page |
 | `ccExtendedGraphPanel.ts` | Extended Graph section (rename, title switch, `egShow` compact options), `addCCOtherSettings` |
 | `ccPanel.ts` | `addHeaderToggle`, `equalizePanelMargins`, `renameSection` |
-| `ccPanelLayout.ts` | `applyPanelLayout` (order, renames, Display + Forces merged), `CCOptionsSection` |
+| `ccPanelLayout.ts` | `applyPanelLayout` (order, renames, Display + Forces merged, native Node size hidden and locked to 1 by `lockNativeNodeSize`), `CCOptionsSection` |
 | `ccQuery.ts` | `CCQuery` / `CCQueryList`: Obsidian search syntax (lexer + recursive-descent parser) |
 | `ccQuerySuggest.ts` | `CCQuerySuggest`: "Search options" popup for query boxes |
 | `ccNodeFactor.ts` | Node Weight core: `computeNodeFactor`, `nodeFactorSize`, `CCNodeFactor` (cache, states) |

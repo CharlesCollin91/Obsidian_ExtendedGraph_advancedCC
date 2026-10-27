@@ -12,7 +12,7 @@
 - **Filters**: "+ Add query" rows under the search box, combined with AND / OR.
 - A cleaner panel: Filters · Node Color · Node Repartition · Node Weight · Node level · Extended Graph · Options, with on/off switches in the section titles, plus a compact mode for the settings page.
 
-**Actual Plugin Version** : 1.15.0 <br>
+**Actual Plugin Version** : 1.16.0 <br>
 **License** : [GPL-3.0-only](LICENSE)
 
 ## Requirements

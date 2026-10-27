@@ -1,7 +1,7 @@
 {
 	"id": "extendedgraph-advancedcc",
 	"name": "ExtendedGraph_advancedCC",
-	"version": "1.15.0",
+	"version": "1.16.0",
 	"minAppVersion": "1.7.0",
 	"description": "Extended Graph fork: size nodes with your own formula, bring local-graph depth to the global graph, combine extra filter queries and use a reorganized graph panel.",
 	"author": "Charles Collin",

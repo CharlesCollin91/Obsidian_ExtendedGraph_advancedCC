@@ -4,9 +4,21 @@
  *   Node Repartition = native "Display" + "Forces" merged (one title, both contents; folding together)
  *   renames: Groups -> Node Color, Display -> Node Repartition (ExtendedGraph/NodeFactor/OptionCC renamed where created)
  *   "Options" = new empty section, last, for future settings.
+ *   Native "Node size" slider hidden and kept at its default (1): node size is set by Node Weight only.
  */
 import { Component, setIcon } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
+import { getEngine } from "../internal";
+import { CCLogger } from "./ccLogger";
+
+const NATIVE_NODE_SIZE_DEFAULT = 1;
+
+type EngineOptionsLike = { nodeSizeMultiplier?: number } & Record<string, unknown>;
+interface NodeSizeEngine {
+    options: EngineOptionsLike;
+    setOptions: (o?: EngineOptionsLike) => void;
+    ccNodeSizeLocked?: boolean;
+}
 
 const NATIVE: Record<string, { cls: string; title: string }> = {
     filter: { cls: "mod-filter", title: "Filters" },
@@ -59,6 +71,42 @@ function mergeDisplayForces(display: HTMLElement, forces: HTMLElement): void {
     window.setTimeout(sync, 0);
 }
 
+function hideNativeNodeSize(display: HTMLElement): void {
+    if (!display.querySelector(".tree-item-children")) return; // folded: nothing rendered yet
+    let found = false;
+    display.querySelectorAll<HTMLElement>(".setting-item").forEach(item => {
+        if (item.querySelector(".setting-item-name")?.textContent?.trim() === "Node size") { item.addClass("graphview-cc-hidden"); found = true; }
+    });
+    if (!found && !display.hasClass("graphview-cc-nodesize-warned")) {
+        display.addClass("graphview-cc-nodesize-warned");
+        CCLogger.log("WARN", "Node Repartition: native \"Node size\" slider not found (other UI language?)");
+    }
+}
+
+/**
+ * Hides the native "Node size" slider (Node Repartition) and locks Obsidian's nodeSizeMultiplier to its
+ * default, so it never competes with Node Weight's "Base node size" (graph states saved with another
+ * value are loaded with the default).
+ */
+function lockNativeNodeSize(view: GraphView | LocalGraphView, display: HTMLElement | null): void {
+    if (display) {
+        hideNativeNodeSize(display);
+        const d = display as HTMLElement & { ccNodeSizeHook?: boolean };
+        if (!d.ccNodeSizeHook) {
+            d.ccNodeSizeHook = true; // section contents are (re)built when it is unfolded
+            display.querySelector(":scope > .tree-item-self")?.addEventListener("click", () => window.setTimeout(() => hideNativeNodeSize(display), 0));
+        }
+    }
+    const engine = getEngine(view) as unknown as NodeSizeEngine | undefined;
+    if (!engine || engine.ccNodeSizeLocked) return;
+    engine.ccNodeSizeLocked = true;
+    const orig: NodeSizeEngine["setOptions"] = engine.setOptions;
+    engine.setOptions = (o?: EngineOptionsLike) => {
+        Reflect.apply(orig, engine, [o ? { ...o, nodeSizeMultiplier: NATIVE_NODE_SIZE_DEFAULT } : o]);
+    };
+    if (engine.options.nodeSizeMultiplier !== NATIVE_NODE_SIZE_DEFAULT) engine.setOptions({ ...engine.options });
+}
+
 /** Empty "Options" section, last, for future settings. */
 export class CCOptionsSection extends Component {
     private root: HTMLElement;
@@ -95,6 +143,7 @@ export function applyPanelLayout(view: GraphView | LocalGraphView): void {
     setTitle(display, "Node Repartition");
     if (display && forces) mergeDisplayForces(display, forces);
     if (display) addHeaderIcon(display, "orbit");
+    lockNativeNodeSize(view, display);
 
     const q = (cls: string) => controls.querySelector<HTMLElement>(`:scope > .${cls}`);
     const ordered = [

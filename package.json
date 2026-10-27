@@ -1,6 +1,6 @@
 {
 	"name": "extendedgraph-advancedcc",
-	"version": "1.15.0",
+	"version": "1.16.0",
 	"description": "ExtendedGraph_advancedCC: fork of Extended Graph for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
