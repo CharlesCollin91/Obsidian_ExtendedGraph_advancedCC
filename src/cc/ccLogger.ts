@@ -12,7 +12,7 @@ import { App, apiVersion, FileSystemAdapter, Plugin, Platform } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 
-export const CC_VERSION = "1.1.0";
+export const CC_VERSION = "1.2.0";
 
 type Level = "INIT" | "INFO" | "VIEW" | "ENABLE" | "DISABLE" | "NOTICE" | "WARN" | "ERROR" | "TEST" | "CLOSE";
 
@@ -26,6 +26,8 @@ export class CCLogger {
     private static onWindowError: ((e: ErrorEvent) => void) | null = null;
     private static onRejection: ((e: PromiseRejectionEvent) => void) | null = null;
     private static writing = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private static settings: any = null;
 
     // ============================== LIFECYCLE ==============================
 
@@ -43,6 +45,8 @@ export class CCLogger {
             this.hookNotices();
             this.hookGlobalErrors();
             this.hookGraphEvents(plugin);
+            // Notes are only indexed once the layout is ready: count them there, not at onload.
+            plugin.app.workspace.onLayoutReady(() => this.logVaultReady());
         } catch (e) {
             this.file = null;
             console.error("[GraphView CC] logger init failed:", e);
@@ -124,7 +128,7 @@ export class CCLogger {
             `GraphView CC v${CC_VERSION}  (manifest ${p.manifest.version}, based on Extended Graph 2.7.6)`,
             `Session start : ${this.timestamp()}`,
             `Obsidian API  : ${apiVersion}   Platform: ${Platform.isWin ? "Windows" : Platform.isMacOS ? "macOS" : "other"}`,
-            `Vault         : ${app.vault.getName()}  (${app.vault.getMarkdownFiles().length} markdown files)`,
+            `Vault         : ${app.vault.getName()}`,
             `Log file      : ${this.file}`,
             "=".repeat(78),
             "",
@@ -141,12 +145,23 @@ export class CCLogger {
             this.log("INIT", `settings loaded: maxNodes=${s?.maxNodes}, delay=${s?.delay}ms, startingState=${s?.startingStateID}`);
             this.log("INIT", `features ON (global graph): ${on(s?.enableFeatures?.graph)}`);
             this.log("INIT", `features ON (local graph) : ${on(s?.enableFeatures?.localgraph)}`);
-            const files = this.app?.vault.getMarkdownFiles().length ?? 0;
-            if (s?.maxNodes !== undefined && files > s.maxNodes) {
-                this.log("WARN", `vault has ${files} notes but maxNodes=${s.maxNodes}: the plugin will refuse to enable on a full graph (Settings > Performances)`);
-            }
+            this.settings = s;
         } catch (e) {
             this.error("logSettings", e);
+        }
+    }
+
+    /** Runs once Obsidian has indexed the vault. */
+    private static logVaultReady(): void {
+        try {
+            const files = this.app?.vault.getMarkdownFiles().length ?? 0;
+            this.log("INIT", `vault ready: ${files} markdown files`);
+            const max = this.settings?.maxNodes;
+            if (max !== undefined && files > max) {
+                this.log("WARN", `vault has ${files} notes but maxNodes=${max}: the plugin will refuse to enable on a full graph (Settings > Performances)`);
+            }
+        } catch (e) {
+            this.error("logVaultReady", e);
         }
     }
 
