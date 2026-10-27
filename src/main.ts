@@ -29,6 +29,7 @@ import { CCSettings } from "./cc/ccCompact"; // [CC]
 import { CCNodeFactor } from "./cc/ccNodeFactor"; // [CC]
 import { CCNodeFactorSection, registerNodeFactorEvents } from "./cc/ccNodeFactorUI"; // [CC]
 import { CCOptionCC, CCOptionCCSection, registerOptionCCEvents } from "./cc/ccOptionCC"; // [CC]
+import { CCFilterRows } from "./cc/ccFilterRows"; // [CC]
 
 export default class ExtendedGraphPlugin extends Plugin {
 
@@ -146,6 +147,7 @@ export default class ExtendedGraphPlugin extends Plugin {
     onunload() {
         CCNodeFactorSection.removeAll(); // [CC]
         CCOptionCCSection.removeAll(); // [CC]
+        CCFilterRows.disableAll(); // [CC] restore the native search engine
         CCLogger.close(); // [CC]
     }
 

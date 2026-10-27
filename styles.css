@@ -1530,3 +1530,7 @@ svg.shape-svg {
 
 /* [CC] "Other settings" section folds like the Extended Graph sections */
 .extended-graph-settings .setting-item-heading.setting-cc-other.is-collapsed ~ .setting-cc-other { display: none; }
+
+/* [CC] Filters: extra query rows (AND/OR) under the native search box */
+.graphview-cc-filter-rows { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 6px 0; }
+.graphview-cc-filter-op { flex: 0 0 auto; font-size: var(--font-ui-smaller); padding: 0 18px 0 6px; height: 26px; }

@@ -151,7 +151,6 @@ export class CCOptionCCSection extends Component {
     private isCollapsed = true;
     private enabled = false;
     private headToggle: HeaderToggle;
-    private statusEl: HTMLElement | null = null;
 
     constructor(view: GraphView | LocalGraphView) {
         super();
@@ -170,7 +169,6 @@ export class CCOptionCCSection extends Component {
             this.changed();
         });
         this.children = createDiv("tree-item-children graphview-cc-nodefactor");
-        this.register(CCOptionCC.onChange(() => this.refreshStatus()));
         this.display();
     }
 
@@ -218,8 +216,6 @@ export class CCOptionCCSection extends Component {
         this.addToggle(c, "Outgoing links", "outgoing");
         this.addToggle(c, "Neighbor links", "neighbor");
 
-        this.statusEl = c.createDiv({ cls: "graphview-cc-nf-note graphview-cc-oc-status" });
-        this.refreshStatus();
     }
 
     private addToggle(c: HTMLElement, label: string, key: "incoming" | "outgoing" | "neighbor"): void {
@@ -237,13 +233,5 @@ export class CCOptionCCSection extends Component {
         CCOptionCC.lastStatus = "";
         save();
         rerenderGlobalGraphs();
-        this.refreshStatus();
-    }
-
-    private refreshStatus(): void {
-        if (!this.statusEl) return;
-        const s = CCOptionCC.settings;
-        this.statusEl.setText(!s.enabled ? "OptionCC is OFF: full graph." :
-            CCOptionCC.lastStatus ? `Center: ${CCOptionCC.lastStatus}` : `Center: ${CCOptionCC.center ?? "open a note"}`);
     }
 }
