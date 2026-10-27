@@ -1503,3 +1503,17 @@ svg.shape-svg {
 .graphview-cc-nf-top-name { color: var(--text-normal); }
 .graphview-cc-nf-top-nums { font-family: var(--font-monospace); }
 .graphview-cc-nf-note { font-size: var(--font-ui-small); color: var(--text-muted); padding: 6px 0; }
+
+/* [CC] NodeFactor query rows (+ / ✕) and "Search options" popup */
+.graphview-cc-nf-rows { flex-direction: column; gap: 4px; width: 100%; }
+.graphview-cc-nf-qrow { display: flex; align-items: center; gap: 2px; width: 100%; }
+.graphview-cc-nf-qrow .graphview-cc-nf-input { flex: 1 1 auto; min-width: 0; }
+.graphview-cc-nf-del { flex: 0 0 auto; padding: 2px; }
+.graphview-cc-nf-add { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font-size: var(--font-ui-smaller); color: var(--text-muted); padding: 2px 6px; }
+.graphview-cc-nf-add svg { width: 14px; height: 14px; }
+.graphview-cc-suggest-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--font-ui-smaller); font-weight: 600; color: var(--text-muted); cursor: default; }
+.graphview-cc-suggest-header.is-selected { background: transparent; }
+.graphview-cc-suggest-info { display: inline-flex; cursor: help; }
+.graphview-cc-suggest-info svg { width: 14px; height: 14px; }
+.graphview-cc-suggest-label { font-weight: 500; }
+.graphview-cc-suggest-desc { color: var(--text-muted); }

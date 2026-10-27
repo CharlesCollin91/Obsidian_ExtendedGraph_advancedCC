@@ -14,15 +14,15 @@
  * CORE only (no UI): see ccNodeFactorUI.ts.
  */
 import { App, getAllTags, TFile } from "obsidian";
-import { CCQuery, QueryTarget } from "./ccQuery";
+import { CCQueryList, QueryTarget } from "./ccQuery";
 import { CCLogger } from "./ccLogger";
 
 export interface NodeFactorSettings {
     enabled: boolean;
-    appliesTo: string;
-    queryX: string;
+    appliesTo: string[];   // rows combined with OR (older versions stored a single string)
+    queryX: string[];      // Factor 1 rows
     a: number;
-    queryY: string;
+    queryY: string[];      // Factor 2 rows
     b: number;
     contrast: number;
     base: number;
@@ -32,10 +32,10 @@ export interface NodeFactorSettings {
 
 export const NODEFACTOR_DEFAULTS: NodeFactorSettings = {
     enabled: false,
-    appliesTo: "file:=",
-    queryX: "-file:=",
+    appliesTo: ["file:="],
+    queryX: ["-file:="],
     a: 1,
-    queryY: "file:=",
+    queryY: ["file:="],
     b: 1,
     contrast: 0.5,
     base: 8,
@@ -64,6 +64,18 @@ export interface VaultLinks {
 
 const r2 = (n: number) => Number(n.toFixed(2));
 
+/** Accepts settings from any version (single-string queries) and returns a complete, current object. */
+export function normalizeNodeFactor(raw: Partial<Record<keyof NodeFactorSettings, unknown>> | undefined): NodeFactorSettings {
+    const s = { ...NODEFACTOR_DEFAULTS, ...(raw ?? {}) } as Record<string, unknown>;
+    for (const k of ["appliesTo", "queryX", "queryY"]) {
+        const v = s[k];
+        s[k] = Array.isArray(v) ? v.map(String) : typeof v === "string" ? [v] : [...(NODEFACTOR_DEFAULTS as unknown as Record<string, string[]>)[k]];
+    }
+    return s as unknown as NodeFactorSettings;
+}
+
+export const rowsText = (rows: string[]) => rows.filter(r => r.trim()).map(r => `"${r}"`).join(" OR ") || "(all)";
+
 export function nodeFactorSize(W: number, s: NodeFactorSettings): number {
     const raw = s.base * Math.pow(1 + Math.max(0, W), s.contrast);
     return Math.min(s.max, Math.max(s.min, raw));
@@ -76,7 +88,7 @@ export function formulaText(s: NodeFactorSettings): string {
 
 /** Pure computation: one result per node matching "Applies to". */
 export function computeNodeFactor(v: VaultLinks, s: NodeFactorSettings): Map<string, NodeFactorResult> {
-    const qA = new CCQuery(s.appliesTo), qX = new CCQuery(s.queryX), qY = new CCQuery(s.queryY);
+    const qA = new CCQueryList(s.appliesTo), qX = new CCQueryList(s.queryX), qY = new CCQueryList(s.queryY);
 
     // Undirected neighbor sets. Unresolved targets are keyed by their link text (= graph node id).
     const neighbors = new Map<string, Set<string>>();
@@ -130,19 +142,20 @@ export function vaultLinksFromApp(app: App): VaultLinks {
             if (!(f instanceof TFile)) return { name: path.replace(/\.md$/, ""), path, tags: [] };
             const cache = app.metadataCache.getFileCache(f);
             const tags = cache ? (getAllTags(cache) ?? []).map(x => x.replace(/^#/, "")) : [];
-            return { name: f.basename, path: f.path, tags };
+            return { name: f.basename, path: f.path, tags, props: cache?.frontmatter ?? {} };
         },
     };
 }
 
 /** Runtime state shared by the node size hook and the UI. */
 export class CCNodeFactor {
-    static settings: NodeFactorSettings = { ...NODEFACTOR_DEFAULTS };
+    static settings: NodeFactorSettings = normalizeNodeFactor(undefined);
     private static app: App | null = null;
     private static cache: Map<string, NodeFactorResult> | null = null;
 
     static init(app: App, settings: NodeFactorSettings): void {
         this.app = app;
+        Object.assign(settings, normalizeNodeFactor(settings)); // migrate in place (same object as cc-settings)
         this.settings = settings;
         this.cache = null;
     }
@@ -174,7 +187,7 @@ export class CCNodeFactor {
     /** Applies the NodeFactor saved in a graph state. Returns true if something changed. */
     static applyFromState(saved: Partial<NodeFactorSettings> | undefined, stateName: string): boolean {
         if (!saved) return false;
-        const next = { ...NODEFACTOR_DEFAULTS, ...saved };
+        const next = normalizeNodeFactor(saved);
         if (JSON.stringify(next) === JSON.stringify(this.settings)) return false;
         Object.assign(this.settings, next);
         this.cache = null;
@@ -210,7 +223,7 @@ export class CCNodeFactor {
         const s = this.settings;
         const lines = [
             `NodeFactor table | ${formulaText(s)}`,
-            `  appliesTo="${s.appliesTo}"  X="${s.queryX}"  Y="${s.queryY}"`,
+            `  appliesTo=${rowsText(s.appliesTo)}  F1=${rowsText(s.queryX)}  F2=${rowsText(s.queryY)}`,
             ...rows.map(r => `  ${r.name.padEnd(32)} X=${String(r.X).padStart(3)}  Y=${String(r.Y).padStart(3)}  W=${r.W.toFixed(2).padStart(7)}  size=${r.size.toFixed(1)}`),
         ];
         return lines.join("\n");

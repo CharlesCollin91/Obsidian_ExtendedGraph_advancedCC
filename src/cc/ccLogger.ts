@@ -12,7 +12,7 @@ import { App, apiVersion, FileSystemAdapter, Plugin, Platform } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
 
-export const CC_VERSION = "1.6.0";
+export const CC_VERSION = "1.7.0";
 
 type Level = "INIT" | "INFO" | "VIEW" | "ENABLE" | "DISABLE" | "NOTICE" | "WARN" | "ERROR" | "TEST" | "CLOSE";
 

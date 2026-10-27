@@ -5,11 +5,12 @@
  * Layout is built for a narrow panel: one full-width row per control,
  * label + (?) help icon on top, control below. No long descriptions: help is in the tooltips.
  */
-import { Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, TextComponent, ToggleComponent } from "obsidian";
+import { App, Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, TextComponent, ToggleComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
-import { CCNodeFactor, formulaText, NodeFactorSettings } from "./ccNodeFactor";
+import { CCNodeFactor, formulaText, NodeFactorSettings, rowsText } from "./ccNodeFactor";
 import { CCSettings } from "./ccCompact";
 import { CCQuery } from "./ccQuery";
+import { CCQuerySuggest } from "./ccQuerySuggest";
 import { CCLogger } from "./ccLogger";
 import { ExtendedGraphInstances } from "../internal";
 
@@ -46,7 +47,7 @@ function redrawGraphs(): void {
 const saveAndLog = debounce(() => {
     void CCSettings.save();
     const s = CCNodeFactor.settings;
-    CCLogger.log("INFO", `NodeFactor settings: ${formulaText(s)} | appliesTo="${s.appliesTo}" X="${s.queryX}" Y="${s.queryY}"`);
+    CCLogger.log("INFO", `NodeFactor settings: ${formulaText(s)} | appliesTo=${rowsText(s.appliesTo)} F1=${rowsText(s.queryX)} F2=${rowsText(s.queryY)}`);
 }, 800, true);
 
 function helpIcon(parent: HTMLElement, text: string): void {
@@ -63,9 +64,11 @@ export class CCNodeFactorSection extends Component {
     private isCollapsed = true;
     private enabled = false;
     private equationHelpEl: HTMLElement | null = null;
+    private app: App;
 
     constructor(view: GraphView | LocalGraphView) {
         super();
+        this.app = view.app;
         const controls = view.contentEl.querySelector(".graph-controls") as HTMLElement;
         controls.querySelectorAll(".mod-graphview-cc-nodefactor").forEach(el => el.remove()); // stale copy from a previous load
         CCNodeFactorSection.live.add(this);
@@ -168,20 +171,57 @@ export class CCNodeFactorSection extends Component {
         if (help) helpIcon(g, help);
     }
 
+    /** A list of query rows (OR), each with a ✕, and a "+" below to add a row — like graph Groups. */
     private addQuery(c: HTMLElement, label: string, key: QueryKey): void {
         const s = CCNodeFactor.settings;
-        const body = label ? this.row(c, label, HELP[key]).body : c.createDiv({ cls: "graphview-cc-nf-row graphview-cc-nf-body" });
-        const text = new TextComponent(body).setPlaceholder("empty = all notes").setValue(s[key]);
-        text.inputEl.addClass("graphview-cc-nf-input");
-        const commit = debounce((v: string) => {
-            const q = new CCQuery(v);
-            text.inputEl.toggleClass("graphview-cc-invalid", !!q.error);
-            setTooltip(text.inputEl, q.error ? `Invalid query: ${q.error}` : HELP[key]);
-            if (q.error) return;
-            s[key] = v;
+        const wrap = label ? this.row(c, label, HELP[key]).body : c.createDiv({ cls: "graphview-cc-nf-row graphview-cc-nf-body" });
+        wrap.addClass("graphview-cc-nf-rows");
+        const rows = s[key];
+        if (rows.length === 0) rows.push("");
+
+        const commitAll = () => {
+            const clean = rows.map(r => r.trim());
+            s[key] = clean.filter((r, i) => r !== "" || clean.length === 1 || i === clean.length - 1);
             this.changed(`${key} changed`);
-        }, 400, true);
-        text.onChange(commit);
+        };
+
+        const render = () => {
+            wrap.empty();
+            rows.forEach((value, idx) => {
+                const line = wrap.createDiv({ cls: "graphview-cc-nf-qrow" });
+                const text = new TextComponent(line).setPlaceholder("Enter query…").setValue(value);
+                text.inputEl.addClass("graphview-cc-nf-input");
+                let last = value;
+                const validate = (v: string) => {
+                    const q = new CCQuery(v);
+                    text.inputEl.toggleClass("graphview-cc-invalid", !!q.error);
+                    setTooltip(text.inputEl, q.error ? `Invalid query: ${q.error}` : HELP[key]);
+                    return !q.error;
+                };
+                validate(value);
+                const commit = debounce((v: string) => {
+                    if (v === last) return;              // focus re-dispatch: nothing changed
+                    if (!validate(v)) return;
+                    last = v;
+                    rows[idx] = v;
+                    commitAll();
+                }, 400, true);
+                text.onChange(commit);
+                new CCQuerySuggest(this.app, text.inputEl, () => { /* commit happens on the input event */ });
+                if (rows.length > 1) {
+                    const del = line.createDiv({ cls: "clickable-icon graphview-cc-nf-del" });
+                    setIcon(del, "x");
+                    setTooltip(del, "Remove this query");
+                    del.onClickEvent(() => { rows.splice(idx, 1); commitAll(); render(); });
+                }
+            });
+            const add = wrap.createDiv({ cls: "clickable-icon graphview-cc-nf-add" });
+            setIcon(add, "plus");
+            add.createSpan({ text: "Add query" });
+            setTooltip(add, "Add another query (a note counts if it matches any of them)");
+            add.onClickEvent(() => { rows.push(""); render(); (wrap.querySelectorAll("input") as NodeListOf<HTMLInputElement>)[rows.length - 1]?.focus(); });
+        };
+        render();
     }
 
     private addSlider(c: HTMLElement, label: string, key: NumKey, min: number, max: number, step: number): void {
