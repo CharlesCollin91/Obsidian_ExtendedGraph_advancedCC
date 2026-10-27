@@ -34,6 +34,7 @@ import ExtendedGraphPlugin from "../main";
 
 import { addCCVersionBadge } from "../cc/ccBadge"; // [CC]
 import { CCCompact } from "../cc/ccCompact"; // [CC]
+import { addCCPanelSettings } from "../cc/ccExtendedGraphPanel"; // [CC]
 
 export class ExtendedGraphSettingTab extends PluginSettingTab {
     sections: SettingsSection[] = [];
@@ -105,6 +106,8 @@ export class ExtendedGraphSettingTab extends PluginSettingTab {
             section.display();
             CCCompact.mark(section.id, section.title, navBefore); // [CC]
         }
+        addCCPanelSettings(this.containerEl); // [CC] end of page
+        CCCompact.mark("cc-panels", "Graph panel (GraphView CC)", -1, false); // [CC] always visible
         CCCompact.apply(); // [CC]
     }
 

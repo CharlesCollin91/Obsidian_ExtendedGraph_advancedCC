@@ -1517,3 +1517,13 @@ svg.shape-svg {
 .graphview-cc-suggest-info svg { width: 14px; height: 14px; }
 .graphview-cc-suggest-label { font-weight: 500; }
 .graphview-cc-suggest-desc { color: var(--text-muted); }
+
+/* [CC] Graph panel: switch in section titles, equal top/bottom margin */
+.graph-controls .tree-item-self .graphview-cc-head-toggle { margin-left: auto; display: flex; align-items: center; padding-left: 6px; }
+.graph-controls .tree-item-self .graphview-cc-head-toggle .checkbox-container { transform: scale(0.85); transform-origin: right center; }
+.graph-controls .tree-item-self .graphview-cc-head-toggle.is-disabled { opacity: 0.4; }
+.graph-controls.graphview-cc-panel-margins:not(.is-close) {
+    max-height: calc(100% - 2 * var(--graphview-cc-panel-gap, 12px));
+    overflow-y: auto;
+}
+.graphview-cc-nf-equation .graphview-cc-nf-label { font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-accent); }

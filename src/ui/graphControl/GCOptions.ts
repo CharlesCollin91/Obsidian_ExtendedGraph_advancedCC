@@ -11,6 +11,8 @@ import {
     NodesSelectionMode
 } from "../../internal";
 
+import { egShow } from "../../cc/ccExtendedGraphPanel"; // [CC]
+
 export class GCOptions extends GCSection {
     suggester: RendererNodeNamesSuggester;
 
@@ -30,15 +32,16 @@ export class GCOptions extends GCSection {
     override display(enable: boolean) {
         this.treeItemChildren.replaceChildren();
 
-        if (enable) this.createImportConfig();
-        this.createSaveForDefaultState();
-        if (enable) this.createSaveForNormalState();
-        this.createZoomOnNode();
-        this.createScreenshot();
-        if (enable) this.createButtonViewState();
-        if (enable) this.createPinMultipleNodes();
-        if (enable) this.createUnpinAllNodes();
-        if (enable) this.createSelectionModes();
+        // [CC] egShow(): compact options (GraphView CC setting)
+        if (enable && egShow("importConfig")) this.createImportConfig();
+        if (egShow("saveForDefaultState")) this.createSaveForDefaultState();
+        if (enable && egShow("saveForNormalState")) this.createSaveForNormalState();
+        if (egShow("zoomOnNode")) this.createZoomOnNode();
+        if (egShow("screenshot")) this.createScreenshot();
+        if (enable && egShow("viewState")) this.createButtonViewState();
+        if (enable && egShow("pinMultipleNodes")) this.createPinMultipleNodes();
+        if (enable && egShow("unpinAllNodes")) this.createUnpinAllNodes();
+        if (enable && egShow("selectionModes")) this.createSelectionModes();
     }
 
     private createImportConfig(): Setting {

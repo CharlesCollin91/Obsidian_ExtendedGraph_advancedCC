@@ -16,9 +16,10 @@ interface CCSettingsData {
     compactMode: boolean;
     pinnedGroups: string[];
     nodeFactor: NodeFactorSettings;
+    egPanelCompact: boolean;   // ExtendedGraph section of the graph panel: compact options only
 }
 
-const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: normalizeNodeFactor(undefined) };
+const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: normalizeNodeFactor(undefined), egPanelCompact: false };
 
 /** Section id -> feature keys in settings.enableFeatures (used for the "with features ON" counter). */
 const SECTION_FEATURES: Record<string, string[]> = {
@@ -50,6 +51,7 @@ export class CCSettings {
                 this.data = { ...DEFAULTS, ...raw, nodeFactor: normalizeNodeFactor(raw.nodeFactor) };
             }
             CCLogger.log("INIT", `compact mode=${this.data.compactMode ? "ON" : "OFF"}, pinned=[${this.data.pinnedGroups.join(", ")}]`);
+            CCLogger.log("INIT", `ExtendedGraph panel: ${this.data.egPanelCompact ? "compact" : "full"} options`);
             CCLogger.log("INIT", `NodeFactor ${this.data.nodeFactor.enabled ? "ON" : "OFF"}: ${JSON.stringify(this.data.nodeFactor)}`);
         } catch (e) {
             this.data = { ...DEFAULTS, nodeFactor: normalizeNodeFactor(undefined) };

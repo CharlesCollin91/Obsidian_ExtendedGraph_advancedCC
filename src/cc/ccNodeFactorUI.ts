@@ -5,12 +5,13 @@
  * Layout is built for a narrow panel: one full-width row per control,
  * label + (?) help icon on top, control below. No long descriptions: help is in the tooltips.
  */
-import { App, Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, TextComponent, ToggleComponent } from "obsidian";
+import { App, Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, TextComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
 import { CCNodeFactor, formulaText, NodeFactorSettings, rowsText } from "./ccNodeFactor";
 import { CCSettings } from "./ccCompact";
 import { CCQuery } from "./ccQuery";
 import { CCQuerySuggest } from "./ccQuerySuggest";
+import { addHeaderToggle, equalizePanelMargins, HeaderToggle } from "./ccPanel";
 import { CCLogger } from "./ccLogger";
 import { ExtendedGraphInstances } from "../internal";
 
@@ -18,23 +19,26 @@ type NumKey = "a" | "b" | "contrast" | "base" | "min" | "max";
 type QueryKey = "appliesTo" | "queryX" | "queryY";
 
 const HELP = {
-    enable: "Turns the formula on/off. OFF = Obsidian's native node sizes.",
-    appliesTo: "Which nodes get resized (same syntax as Groups). Others keep their native size.",
-    queryX: "Factor 1 = number of linked notes matching this query (e.g. books, reflections: -file:=).",
-    a: "Weight of Factor 1. 0 = ignored.",
-    queryY: "Factor 2 = number of linked notes matching this query (e.g. other themes: file:=).",
-    b: "Weight of Factor 2. 0 = ignored.",
-    base: "Size of a node with no links (W = 0).",
-    contrast: "0 = all nodes equal, 0.5 = square root, 1 = linear (strong hierarchy).",
+    enable: "NodeFactor on/off. OFF = Obsidian's native node sizes.",
+    appliesTo: "Which nodes (notes) get resized.",
+    queryX: "X = number of linked notes matching these queries (e.g. books, reflections: -file:=).",
+    a: "a = weight of X. 0 = X ignored.",
+    queryY: "Y = number of linked notes matching these queries (e.g. other themes: file:=).",
+    b: "b = weight of Y. 0 = Y ignored.",
+    base: "Size of a node with no links.",
+    contrast: "c = contrast between nodes. 0 = all equal, 0.5 = square root, 1 = linear (strong hierarchy).",
     min: "Smallest allowed node size.",
     max: "Largest allowed node size.",
 };
 
+const EQUATION_LABEL = "NodeWeight = (a·X + b·Y)·c";
+
 function equationHelp(s: NodeFactorSettings): string {
     const f = (n: number) => Number(n.toFixed(2)).toString();
-    return `size = ${f(s.base)} × (1 + ${f(s.a)}·F1 + ${f(s.b)}·F2)^${f(s.contrast)}\n` +
-        `bounded between ${f(s.min)} and ${f(s.max)}\n` +
-        `F1, F2 = linked notes matching each query, counted on the whole vault, both link directions.`;
+    return "Displayed is the simplified equation to determine node weight. Here is the accurate one:\n" +
+        `size = base × (1 + a·X + b·Y)^c, bounded between min and max\n` +
+        `now: size = ${f(s.base)} × (1 + ${f(s.a)}·X + ${f(s.b)}·Y)^${f(s.contrast)}, bounded between ${f(s.min)} and ${f(s.max)}\n` +
+        "X, Y = linked notes matching each variable's queries, counted on the whole vault, both link directions.";
 }
 
 /** Redraw every open graph view (sizes are read again at the next frame). */
@@ -47,7 +51,7 @@ function redrawGraphs(): void {
 const saveAndLog = debounce(() => {
     void CCSettings.save();
     const s = CCNodeFactor.settings;
-    CCLogger.log("INFO", `NodeFactor settings: ${formulaText(s)} | appliesTo=${rowsText(s.appliesTo)} F1=${rowsText(s.queryX)} F2=${rowsText(s.queryY)}`);
+    CCLogger.log("INFO", `NodeFactor settings: ${formulaText(s)} | appliesTo=${rowsText(s.appliesTo)} X=${rowsText(s.queryX)} Y=${rowsText(s.queryY)}`);
 }, 800, true);
 
 function helpIcon(parent: HTMLElement, text: string): void {
@@ -64,6 +68,7 @@ export class CCNodeFactorSection extends Component {
     private isCollapsed = true;
     private enabled = false;
     private equationHelpEl: HTMLElement | null = null;
+    private headToggle: HeaderToggle;
     private app: App;
 
     constructor(view: GraphView | LocalGraphView) {
@@ -80,6 +85,12 @@ export class CCNodeFactorSection extends Component {
         setIcon(head.createDiv("tree-item-header-icon"), "scale");
         head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "NodeFactor" });
         head.onClickEvent(() => this.isCollapsed ? this.open() : this.close());
+        this.headToggle = addHeaderToggle(this.root, HELP.enable, CCNodeFactor.settings.enabled, v => {
+            CCNodeFactor.settings.enabled = v;
+            CCLogger.log("INFO", `NodeFactor ${v ? "ON" : "OFF"}`);
+            this.changed("enabled");
+        });
+        equalizePanelMargins(controls);
 
         this.children = createDiv("tree-item-children graphview-cc-nodefactor");
         this.register(CCNodeFactor.onChange(() => this.display()));
@@ -119,37 +130,32 @@ export class CCNodeFactorSection extends Component {
         const c = this.children;
         c.empty();
         const s = CCNodeFactor.settings;
+        this.headToggle?.set(s.enabled);
+        this.headToggle?.setDisabled(!this.enabled);
 
         if (!this.enabled) {
             c.createDiv({ cls: "graphview-cc-nf-note", text: "Enable GraphView CC on this graph to use NodeFactor." });
             return;
         }
 
-        // Enable
-        const en = this.row(c, "Enable NodeFactor", HELP.enable, true);
-        new ToggleComponent(en.head).setValue(s.enabled).onChange(v => {
-            s.enabled = v;
-            CCLogger.log("INFO", `NodeFactor ${v ? "ON" : "OFF"}`);
-            this.changed("enabled");
-        });
-
-        // Equation: only in the (?) tooltip, kept up to date
-        const eq = this.row(c, "Equation for hierarchy", equationHelp(s));
+        // Equation: simplified label, accurate formula in the (?) tooltip (kept up to date)
+        const eq = this.row(c, EQUATION_LABEL, equationHelp(s));
+        eq.head.addClass("graphview-cc-nf-equation");
         this.equationHelpEl = eq.head.querySelector(".graphview-cc-help") as HTMLElement;
 
-        this.addQuery(c, "Applies to", "appliesTo");
+        this.addQuery(c, "Node to apply Weight", "appliesTo");
 
-        this.group(c, "Factor 1", HELP.queryX);
+        this.group(c, "Variable X", HELP.queryX);
         this.addQuery(c, "", "queryX");
-        this.addSlider(c, "Multiplier", "a", 0, 5, 0.1);
+        this.addSlider(c, "a (Weight multiplier)", "a", 0, 5, 0.1);
 
-        this.group(c, "Factor 2", HELP.queryY);
+        this.group(c, "Variable Y", HELP.queryY);
         this.addQuery(c, "", "queryY");
-        this.addSlider(c, "Multiplier", "b", 0, 5, 0.1);
+        this.addSlider(c, "b (Weight multiplier)", "b", 0, 5, 0.1);
 
         this.group(c, "Emphasis");
         this.addSlider(c, "Base size node", "base", 0.5, 30, 0.5);
-        this.addSlider(c, "Contrast between nodes", "contrast", 0, 1.5, 0.05);
+        this.addSlider(c, "c (Contrast between nodes)", "contrast", 0, 1.5, 0.05);
         this.addSlider(c, "Min size node", "min", 0.5, 50, 0.5);
         this.addSlider(c, "Max size node", "max", 10, 200, 5);
     }

@@ -223,7 +223,7 @@ export class CCNodeFactor {
         const s = this.settings;
         const lines = [
             `NodeFactor table | ${formulaText(s)}`,
-            `  appliesTo=${rowsText(s.appliesTo)}  F1=${rowsText(s.queryX)}  F2=${rowsText(s.queryY)}`,
+            `  appliesTo=${rowsText(s.appliesTo)}  X=${rowsText(s.queryX)}  Y=${rowsText(s.queryY)}`,
             ...rows.map(r => `  ${r.name.padEnd(32)} X=${String(r.X).padStart(3)}  Y=${String(r.Y).padStart(3)}  W=${r.W.toFixed(2).padStart(7)}  size=${r.size.toFixed(1)}`),
         ];
         return lines.join("\n");
