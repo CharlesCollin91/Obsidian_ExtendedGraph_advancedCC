@@ -21,7 +21,7 @@ export function egShow(option: EGOption): boolean {
 }
 
 export function setupExtendedGraphSection(view: GraphView | LocalGraphView, sectionRoot: HTMLElement): HeaderToggle {
-    renameSection(sectionRoot, "ExtendedGraph");
+    renameSection(sectionRoot, "Extended Graph");
     const lm = () => ExtendedGraphInstances.graphsManager.lifecycleManager;
     const toggle = addHeaderToggle(sectionRoot, "Extended Graph on/off for this graph view", false, v => {
         CCLogger.log("INFO", `ExtendedGraph ${v ? "enable" : "disable"} requested from panel title`);

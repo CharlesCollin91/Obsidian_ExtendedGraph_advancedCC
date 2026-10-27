@@ -162,7 +162,7 @@ export class CCOptionCCSection extends Component {
         this.collapseIcon = head.createDiv("tree-item-icon collapse-icon is-collapsed");
         setIcon(this.collapseIcon, "right-triangle");
         setIcon(head.createDiv("tree-item-header-icon"), "focus");
-        head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "OptionCC" });
+        head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "Node level" });
         head.onClickEvent(() => this.isCollapsed ? this.open() : this.close());
         this.headToggle = addHeaderToggle(this.root, HELP.enable, CCOptionCC.settings.enabled, v => {
             CCOptionCC.settings.enabled = v;

@@ -83,7 +83,7 @@ export class CCNodeFactorSection extends Component {
         this.collapseIcon = head.createDiv("tree-item-icon collapse-icon is-collapsed");
         setIcon(this.collapseIcon, "right-triangle");
         setIcon(head.createDiv("tree-item-header-icon"), "scale");
-        head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "NodeFactor" });
+        head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "Node Weight" });
         head.onClickEvent(() => this.isCollapsed ? this.open() : this.close());
         this.headToggle = addHeaderToggle(this.root, HELP.enable, CCNodeFactor.settings.enabled, v => {
             CCNodeFactor.settings.enabled = v;

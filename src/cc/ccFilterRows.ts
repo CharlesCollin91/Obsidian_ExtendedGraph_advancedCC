@@ -63,8 +63,8 @@ function unwrapEngine(engine: Engine): void {
 export function renameGroupsSection(view: GraphView | LocalGraphView): void {
     const headers = Array.from(view.contentEl.querySelectorAll(".graph-control-section .graph-control-section-header")) as HTMLElement[];
     const h = (view.contentEl.querySelector(".graph-control-section.mod-color-groups .graph-control-section-header") as HTMLElement | null)
-        ?? headers.find(x => x.textContent?.trim() === "Groups");
-    if (h) h.textContent = "Color by group";
+        ?? headers.find(x => ["Groups", "Color by group"].includes(x.textContent?.trim() ?? ""));
+    if (h) h.textContent = "Node Color";
 }
 
 const saveAndLog = debounce(() => {

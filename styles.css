@@ -1534,3 +1534,8 @@ svg.shape-svg {
 /* [CC] Filters: extra query rows (AND/OR) under the native search box */
 .graphview-cc-filter-rows { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 6px 0; }
 .graphview-cc-filter-op { flex: 0 0 auto; font-size: var(--font-ui-smaller); padding: 0 18px 0 6px; height: 26px; }
+
+/* [CC] Node Repartition = Display + Forces merged */
+.graph-controls .graph-control-section.graphview-cc-merged-forces > .tree-item-self { display: none; }
+.graph-controls .graph-control-section.graphview-cc-merged-forces { border-top: none; margin-top: 0; padding-top: 0; }
+.graph-controls .graph-control-section.graphview-cc-merged-display { border-bottom: none; padding-bottom: 0; }

@@ -6,6 +6,7 @@ import { setupExtendedGraphSection } from "../../cc/ccExtendedGraphPanel"; // [C
 import { HeaderToggle } from "../../cc/ccPanel"; // [CC]
 import { CCOptionCCSection } from "../../cc/ccOptionCC"; // [CC]
 import { CCFilterRows, renameGroupsSection } from "../../cc/ccFilterRows"; // [CC]
+import { applyPanelLayout, CCOptionsSection } from "../../cc/ccPanelLayout"; // [CC]
 
 export class GraphControlsUI extends Component {
     instances: GraphInstances | null;
@@ -28,6 +29,8 @@ export class GraphControlsUI extends Component {
         this.ccEGToggle = setupExtendedGraphSection(view, this.sectionSettings.root); // [CC] rename + title switch
         renameGroupsSection(view); // [CC] "Groups" -> "Color by group"
         this.ccFilterRows = new CCFilterRows(view); // [CC]
+        this.addChild(new CCOptionsSection(view)); // [CC] empty "Options", last
+        applyPanelLayout(view); // [CC] names, Display+Forces merge, order
         this.ccNodeFactor = new CCNodeFactorSection(view); // [CC]
         this.addChild(this.ccNodeFactor); // [CC]
         if (view.getViewType() === "graph") { this.ccOptionCC = new CCOptionCCSection(view); this.addChild(this.ccOptionCC); } // [CC]
@@ -40,6 +43,7 @@ export class GraphControlsUI extends Component {
         this.ccEGToggle.set(true); // [CC]
         this.ccOptionCC?.onPluginEnabled(); // [CC]
         this.ccFilterRows.enable(instances.engine); // [CC]
+        window.setTimeout(() => applyPanelLayout(this.view), 0); // [CC] sections added on enable (folders…)
     }
 
     onPluginDisabled(): void {
@@ -48,5 +52,6 @@ export class GraphControlsUI extends Component {
         this.ccEGToggle.set(false); // [CC]
         this.ccOptionCC?.onPluginDisabled(); // [CC]
         this.ccFilterRows.disable(); // [CC]
+        window.setTimeout(() => applyPanelLayout(this.view), 0); // [CC]
     }
 }
