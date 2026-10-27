@@ -32,6 +32,8 @@ import {
 } from "../internal";
 import ExtendedGraphPlugin from "../main";
 
+import { addCCVersionBadge } from "../cc/ccBadge"; // [CC]
+
 export class ExtendedGraphSettingTab extends PluginSettingTab {
     sections: SettingsSection[] = [];
     originalSettings: ExtendedGraphSettings;
@@ -85,6 +87,7 @@ export class ExtendedGraphSettingTab extends PluginSettingTab {
         this.originalSettings = structuredClone(ExtendedGraphInstances.settings);
         this.containerEl.empty();
         this.containerEl.addClass("extended-graph-settings");
+        addCCVersionBadge(this.containerEl); // [CC]
 
         this.addImportExport();
         this.addNav();

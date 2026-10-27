@@ -23,11 +23,16 @@ import {
 
 // https://pixijs.download/v7.4.2/docs/index.html
 
+import { CCLogger } from "./cc/ccLogger"; // [CC]
+import { addCCCommands } from "./cc/ccCommands"; // [CC]
+
 export default class ExtendedGraphPlugin extends Plugin {
 
     // ================================ LOADING ================================
 
     async onload(): Promise<void> {
+        CCLogger.init(this); // [CC]
+        CCLogger.log("INIT", "onload start"); // [CC]
         await this.checkDataValidity();
 
         ExtendedGraphInstances.plugin = this;
@@ -35,6 +40,7 @@ export default class ExtendedGraphPlugin extends Plugin {
         ExtendedGraphInstances.configurationDirectory = normalizePath(this.manifest.dir + "/configs/");
         ExtendedGraphInstances.proxysManager = new ProxysManager();
         await this.loadSettings();
+        CCLogger.logSettings(ExtendedGraphInstances.settings); // [CC]
 
         this.addIcons();
 
@@ -63,6 +69,8 @@ export default class ExtendedGraphPlugin extends Plugin {
         );
 
         addCommands(this);
+        addCCCommands(this); // [CC]
+        CCLogger.log("INIT", "onload done"); // [CC]
     }
 
     private addIcons(): void {
@@ -127,6 +135,7 @@ export default class ExtendedGraphPlugin extends Plugin {
     // =============================== UNLOADING ===============================
 
     onunload() {
+        CCLogger.close(); // [CC]
     }
 
     // ================================ SETTINGS ===============================
