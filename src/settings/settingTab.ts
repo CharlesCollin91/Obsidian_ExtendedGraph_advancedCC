@@ -33,6 +33,7 @@ import {
 import ExtendedGraphPlugin from "../main";
 
 import { addCCVersionBadge } from "../cc/ccBadge"; // [CC]
+import { CCCompact } from "../cc/ccCompact"; // [CC]
 
 export class ExtendedGraphSettingTab extends PluginSettingTab {
     sections: SettingsSection[] = [];
@@ -87,17 +88,24 @@ export class ExtendedGraphSettingTab extends PluginSettingTab {
         this.originalSettings = structuredClone(ExtendedGraphInstances.settings);
         this.containerEl.empty();
         this.containerEl.addClass("extended-graph-settings");
-        addCCVersionBadge(this.containerEl); // [CC]
+        addCCVersionBadge(this.containerEl, ExtendedGraphInstances.settings); // [CC]
 
         this.addImportExport();
+        CCCompact.mark("import-export", "Import / export"); // [CC]
         this.addNav();
+        CCCompact.mark("nav", "Navigation", -1, false); // [CC] always visible, no pin
         this.addDisableNodes();
+        CCCompact.mark("disable-nodes", "Disable nodes"); // [CC]
         this.addCanonicalPropertiesWithDataview();
+        CCCompact.mark("canonical-dataview", "Canonical properties (Dataview)"); // [CC]
 
         // FEATURES
         for (const section of this.sections) {
+            const navBefore = CCCompact.navCount(); // [CC]
             section.display();
+            CCCompact.mark(section.id, section.title, navBefore); // [CC]
         }
+        CCCompact.apply(); // [CC]
     }
 
     private addImportExport(): void {

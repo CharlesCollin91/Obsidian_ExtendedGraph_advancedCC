@@ -1442,7 +1442,7 @@ svg.shape-svg {
 .suggestion-container .extended-graph-duplicate {
     color: var(--text-faint);
 }
-/* [CC] GraphView CC version badge */
+/* [CC] GraphView CC version badge + compact mode */
 .graphview-cc-badge {
     margin: 0 0 12px 0;
     padding: 6px 10px;
@@ -1451,6 +1451,17 @@ svg.shape-svg {
     border-radius: 4px;
     font-size: var(--font-ui-small);
 }
+.graphview-cc-badge-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .graphview-cc-badge-version { font-weight: 600; margin-right: 8px; }
 .graphview-cc-badge-base { color: var(--text-muted); }
+.graphview-cc-compact-switch { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.graphview-cc-badge-counter { color: var(--text-muted); margin-top: 4px; }
+.graphview-cc-badge-counter.mod-warning { color: var(--text-warning); }
 .graphview-cc-badge-log { color: var(--text-faint); font-family: var(--font-monospace); font-size: var(--font-ui-smaller); margin-top: 2px; word-break: break-all; }
+
+.graphview-cc-hidden { display: none !important; }
+.graphview-cc-pin-holder { display: inline-flex; margin-right: 4px; }
+.graphview-cc-pin { color: var(--text-faint); opacity: 0.5; }
+.graphview-cc-pin:hover { opacity: 1; }
+.graphview-cc-pin.is-pinned { color: var(--interactive-accent); opacity: 1; }
+.graphview-cc-pin.is-pinned svg { fill: currentColor; }

@@ -25,6 +25,7 @@ import {
 
 import { CCLogger } from "./cc/ccLogger"; // [CC]
 import { addCCCommands } from "./cc/ccCommands"; // [CC]
+import { CCSettings } from "./cc/ccCompact"; // [CC]
 
 export default class ExtendedGraphPlugin extends Plugin {
 
@@ -41,6 +42,7 @@ export default class ExtendedGraphPlugin extends Plugin {
         ExtendedGraphInstances.proxysManager = new ProxysManager();
         await this.loadSettings();
         CCLogger.logSettings(ExtendedGraphInstances.settings); // [CC]
+        await CCSettings.load(this); // [CC]
 
         this.addIcons();
 
