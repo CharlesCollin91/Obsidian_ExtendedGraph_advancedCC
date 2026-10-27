@@ -3,6 +3,16 @@
 All notable changes to GraphView CC. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Based on Extended Graph 2.7.6 (upstream commit `c1aab34`).
 
+## [1.14.0] - 2026-10-27
+### Added
+- Node Weight: an editable name next to Variable X and Variable Y, to label what each variable stands for.
+
+### Changed
+- Node Weight: a, b, c shown in three reds and X, Y in two blues wherever they appear.
+- Node Weight: "Emphasis factor (c)" group, in this order: Node contrast (c), Base node size, Min node size,
+  Max node size.
+- Node Weight: the value next to each slider label is removed (shown while dragging); sliders vertically centered.
+
 ## [1.13.0] - 2026-10-27
 First public release on GitHub.
 

@@ -20,9 +20,11 @@ import { CCLogger } from "./ccLogger";
 export interface NodeFactorSettings {
     enabled: boolean;
     appliesTo: string[];   // rows combined with OR (older versions stored a single string)
-    queryX: string[];      // Factor 1 rows
+    nameX: string;         // user's own name for Variable X (display only)
+    queryX: string[];      // Variable X rows
     a: number;
-    queryY: string[];      // Factor 2 rows
+    nameY: string;         // user's own name for Variable Y (display only)
+    queryY: string[];      // Variable Y rows
     b: number;
     contrast: number;
     base: number;
@@ -33,8 +35,10 @@ export interface NodeFactorSettings {
 export const NODEFACTOR_DEFAULTS: NodeFactorSettings = {
     enabled: false,
     appliesTo: ["file:="],
+    nameX: "",
     queryX: ["-file:="],
     a: 1,
+    nameY: "",
     queryY: ["file:="],
     b: 1,
     contrast: 0.5,
@@ -71,6 +75,7 @@ export function normalizeNodeFactor(raw: Partial<Record<keyof NodeFactorSettings
         const v = s[k];
         s[k] = Array.isArray(v) ? v.map(String) : typeof v === "string" ? [v] : [...(NODEFACTOR_DEFAULTS as unknown as Record<string, string[]>)[k]];
     }
+    for (const k of ["nameX", "nameY"]) s[k] = typeof s[k] === "string" ? s[k] : "";
     return s as unknown as NodeFactorSettings;
 }
 

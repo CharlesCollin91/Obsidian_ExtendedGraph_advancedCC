@@ -17,6 +17,21 @@ import { ExtendedGraphInstances } from "../internal";
 
 type NumKey = "a" | "b" | "contrast" | "base" | "min" | "max";
 type QueryKey = "appliesTo" | "queryX" | "queryY";
+type NameKey = "nameX" | "nameY";
+
+/** a, b, c (three reds) and X, Y (two blues) are colored wherever they appear as single letters. */
+const VAR_LETTER = /(?<![A-Za-z])([abcXY])(?![A-Za-z])/g;
+
+function coloredText(parent: HTMLElement, text: string): void {
+    let last = 0;
+    for (const m of text.matchAll(VAR_LETTER)) {
+        const i = m.index ?? 0;
+        if (i > last) parent.appendText(text.slice(last, i));
+        parent.createSpan({ cls: `graphview-cc-var graphview-cc-var-${m[1]}`, text: m[1] });
+        last = i + m[1].length;
+    }
+    if (last < text.length) parent.appendText(text.slice(last));
+}
 
 const HELP = {
     enable: "NodeFactor on/off. OFF = Obsidian's native node sizes.",
@@ -27,6 +42,7 @@ const HELP = {
     b: "b = weight of Y. 0 = Y ignored.",
     base: "Size of a node with no links.",
     contrast: "c = contrast between nodes. 0 = all equal, 0.5 = square root, 1 = linear (strong hierarchy).",
+    name: "Your own name for this variable (click to rename). Display only.",
     min: "Smallest allowed node size.",
     max: "Largest allowed node size.",
 };
@@ -145,35 +161,47 @@ export class CCNodeFactorSection extends Component {
 
         this.addQuery(c, "Node to apply Weight", "appliesTo");
 
-        this.group(c, "Variable X", HELP.queryX);
+        this.group(c, "Variable X", HELP.queryX, "nameX");
         this.addQuery(c, "", "queryX");
         this.addSlider(c, "a (Weight multiplier)", "a", 0, 5, 0.1);
 
-        this.group(c, "Variable Y", HELP.queryY);
+        this.group(c, "Variable Y", HELP.queryY, "nameY");
         this.addQuery(c, "", "queryY");
         this.addSlider(c, "b (Weight multiplier)", "b", 0, 5, 0.1);
 
-        this.group(c, "Emphasis");
-        this.addSlider(c, "Base size node", "base", 0.5, 30, 0.5);
-        this.addSlider(c, "c (Contrast between nodes)", "contrast", 0, 1.5, 0.05);
-        this.addSlider(c, "Min size node", "min", 0.5, 50, 0.5);
-        this.addSlider(c, "Max size node", "max", 10, 200, 5);
+        this.group(c, "Emphasis factor (c)");
+        this.addSlider(c, "Node contrast (c)", "contrast", 0, 1.5, 0.05);
+        this.addSlider(c, "Base node size", "base", 0.5, 30, 0.5);
+        this.addSlider(c, "Min node size", "min", 0.5, 50, 0.5);
+        this.addSlider(c, "Max node size", "max", 10, 200, 5);
     }
 
     /** One full-width row: header (label + help + optional inline control) and a body below. */
     private row(c: HTMLElement, label: string, help: string, inline = false): { head: HTMLElement; body: HTMLElement } {
         const r = c.createDiv({ cls: "graphview-cc-nf-row" });
         const head = r.createDiv({ cls: "graphview-cc-nf-head" });
-        head.createSpan({ cls: "graphview-cc-nf-label", text: label });
+        coloredText(head.createSpan({ cls: "graphview-cc-nf-label" }), label);
         helpIcon(head, help);
         if (inline) head.createSpan({ cls: "graphview-cc-nf-spacer" });
         const body = r.createDiv({ cls: "graphview-cc-nf-body" });
         return { head, body };
     }
 
-    private group(c: HTMLElement, title: string, help?: string): void {
+    /** Group title; with `nameKey`, an editable name field between the title and the (?). */
+    private group(c: HTMLElement, title: string, help?: string, nameKey?: NameKey): void {
         const g = c.createDiv({ cls: "graphview-cc-nf-group" });
-        g.createSpan({ text: title });
+        coloredText(g.createSpan(), title);
+        if (nameKey) {
+            const s = CCNodeFactor.settings;
+            const name = new TextComponent(g).setPlaceholder("Name").setValue(s[nameKey]);
+            name.inputEl.addClass("graphview-cc-nf-name");
+            setTooltip(name.inputEl, HELP.name);
+            name.inputEl.addEventListener("keydown", e => { if (e.key === "Enter") name.inputEl.blur(); });
+            name.inputEl.addEventListener("change", () => {
+                s[nameKey] = name.getValue().trim();
+                saveAndLog();
+            });
+        }
         if (help) helpIcon(g, help);
     }
 
@@ -232,11 +260,9 @@ export class CCNodeFactorSection extends Component {
 
     private addSlider(c: HTMLElement, label: string, key: NumKey, min: number, max: number, step: number): void {
         const s = CCNodeFactor.settings;
-        const { head, body } = this.row(c, label, HELP[key], true);
-        const valueEl = head.createSpan({ cls: "graphview-cc-nf-value", text: this.fmt(s[key], step) });
-        const slider = new SliderComponent(body).setLimits(min, max, step).setValue(s[key]).onChange(v => {
+        const { body } = this.row(c, label, HELP[key], true);
+        const slider = new SliderComponent(body).setLimits(min, max, step).setValue(s[key]).setDynamicTooltip().onChange(v => {
             s[key] = v;
-            valueEl.setText(this.fmt(v, step));
             this.changed(`${key}=${v}`);
         });
         slider.sliderEl.addClass("graphview-cc-nf-slider");
@@ -247,10 +273,6 @@ export class CCNodeFactorSection extends Component {
         if (this.equationHelpEl) setTooltip(this.equationHelpEl, equationHelp(CCNodeFactor.settings), { placement: "left" });
         saveAndLog();
         redrawGraphs();
-    }
-
-    private fmt(v: number, step: number): string {
-        return step >= 1 ? v.toFixed(0) : step >= 0.1 ? v.toFixed(1) : v.toFixed(2);
     }
 }
 

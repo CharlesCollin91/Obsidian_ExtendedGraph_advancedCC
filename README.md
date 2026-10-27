@@ -1,8 +1,8 @@
-# GraphView_CC
+# Obsidian_ExtendedGraph_advancedCC
 
 <br>
 
-**The plugin** : An [Obsidian](https://obsidian.md) plugin that pushes the core graph view further. It is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) by ElsaTam, with a reorganized graph panel and new ways to read your notes' hierarchy.
+**The plugin** : An [Obsidian](https://obsidian.md) plugin (shown in Obsidian as **GraphView CC**) that pushes the core graph view further. It is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) by ElsaTam, with a reorganized graph panel and new ways to read your notes' hierarchy.
 
 <br>
 
@@ -12,7 +12,7 @@
 - **Filters**: "+ Add query" rows under the search box, combined with AND / OR.
 - A cleaner panel: Filters · Node Color · Node Repartition · Node Weight · Node level · Extended Graph · Options, with on/off switches in the section titles, plus a compact mode for the settings page.
 
-**Actual Plugin Version** : 1.13.0 <br>
+**Actual Plugin Version** : 1.14.0 <br>
 **License** : [GPL-3.0-only](LICENSE)
 
 ## Requirements
@@ -20,14 +20,15 @@ Obsidian 1.7 or later, desktop only. No extra plugin needed. Do not enable it to
 
 ## Install
 1. In Obsidian: Settings → Community plugins → Browse → search **GraphView CC** → Install → Enable.
+   Until it is listed there: install the **BRAT** plugin, then BRAT → Add beta plugin → `CharlesCollin91/Obsidian_ExtendedGraph_advancedCC`.
 2. Open the graph view: the GraphView CC sections are in the panel on the right.
 
 ## How to
 1. Open the graph view and switch the plugin on (Extended Graph switch in the panel).
 <p>&nbsp;</p>
-2. In **Node Weight**, choose which notes are resized ("Node to apply Weight"), then what feeds them: Variable X and Variable Y, each a list of search queries with its weight multiplier (a, b).
+2. In **Node Weight**, choose which notes are resized ("Node to apply Weight"), then what feeds them: Variable X and Variable Y, each a list of search queries with its weight multiplier (a, b). Give each variable your own name in the field next to its title.
 <p>&nbsp;</p>
-3. Shape the hierarchy in **Emphasis**: base size, contrast between nodes (c), min and max size. Hover the (?) icons for the exact equation.
+3. Shape the hierarchy in **Emphasis factor (c)**: node contrast (c), base, min and max node size. Hover the (?) icons for the exact equation.
 <p>&nbsp;</p>
 4. Save the result in a graph state (states bar): each state keeps its own Node Weight.
 <p>&nbsp;</p>

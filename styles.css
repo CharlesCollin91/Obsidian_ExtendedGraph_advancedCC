@@ -1472,10 +1472,24 @@ svg.shape-svg {
 .graphview-cc-nf-head { display: flex; align-items: center; gap: 4px; min-height: 24px; }
 .graphview-cc-nf-label { font-size: var(--font-ui-small); color: var(--text-normal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .graphview-cc-nf-spacer { flex: 1 1 auto; }
-.graphview-cc-nf-body { display: flex; }
+.graphview-cc-nf-body { display: flex; align-items: center; gap: 6px; }
 .graphview-cc-nf-body:empty { display: none; }
 .graphview-cc-nf-input { width: 100%; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); }
-.graphview-cc-nf-slider { width: 100%; }
+.graphview-cc-nf-slider { width: 100%; margin: 0; align-self: center; }
+/* [CC] variable letters: a, b, c = three reds; X, Y = two blues */
+.graphview-cc-var { font-weight: 700; }
+.graphview-cc-var-a { color: #e03131; }
+.graphview-cc-var-b { color: #a61e4d; }
+.graphview-cc-var-c { color: #ff6b6b; }
+.graphview-cc-var-X { color: #1c7ed6; }
+.graphview-cc-var-Y { color: #22b8cf; }
+.graphview-cc-nf-group input.graphview-cc-nf-name {
+    flex: 1 1 auto; min-width: 0; height: 20px; padding: 0 4px;
+    text-transform: none; letter-spacing: normal; font-weight: 400; font-size: var(--font-ui-smaller);
+    background: transparent; border: 1px solid transparent; box-shadow: none; color: var(--text-normal);
+}
+.graphview-cc-nf-group input.graphview-cc-nf-name:hover { border-color: var(--background-modifier-border); }
+.graphview-cc-nf-group input.graphview-cc-nf-name:focus { border-color: var(--interactive-accent); background: var(--background-primary); }
 .graphview-cc-nf-value { font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-accent); min-width: 2.8em; text-align: right; }
 .graphview-cc-help { display: inline-flex; color: var(--text-faint); cursor: help; flex: 0 0 auto; }
 .graphview-cc-help svg { width: 13px; height: 13px; }
