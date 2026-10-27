@@ -28,6 +28,7 @@ import { addCCCommands } from "./cc/ccCommands"; // [CC]
 import { CCSettings } from "./cc/ccCompact"; // [CC]
 import { CCNodeFactor } from "./cc/ccNodeFactor"; // [CC]
 import { CCNodeFactorSection, registerNodeFactorEvents } from "./cc/ccNodeFactorUI"; // [CC]
+import { CCOptionCC, CCOptionCCSection, registerOptionCCEvents } from "./cc/ccOptionCC"; // [CC]
 
 export default class ExtendedGraphPlugin extends Plugin {
 
@@ -47,6 +48,8 @@ export default class ExtendedGraphPlugin extends Plugin {
         await CCSettings.load(this); // [CC]
         CCNodeFactor.init(this.app, CCSettings.data.nodeFactor); // [CC]
         registerNodeFactorEvents(this); // [CC]
+        CCOptionCC.init(this.app, CCSettings.data.optionCC); // [CC]
+        registerOptionCCEvents(this); // [CC]
 
         this.addIcons();
 
@@ -142,6 +145,7 @@ export default class ExtendedGraphPlugin extends Plugin {
 
     onunload() {
         CCNodeFactorSection.removeAll(); // [CC]
+        CCOptionCCSection.removeAll(); // [CC]
         CCLogger.close(); // [CC]
     }
 

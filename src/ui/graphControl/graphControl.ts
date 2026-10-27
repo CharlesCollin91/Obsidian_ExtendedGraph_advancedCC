@@ -4,6 +4,7 @@ import { GCOptions, GraphInstances } from "../../internal";
 import { CCNodeFactorSection } from "../../cc/ccNodeFactorUI"; // [CC]
 import { setupExtendedGraphSection } from "../../cc/ccExtendedGraphPanel"; // [CC]
 import { HeaderToggle } from "../../cc/ccPanel"; // [CC]
+import { CCOptionCCSection } from "../../cc/ccOptionCC"; // [CC]
 
 export class GraphControlsUI extends Component {
     instances: GraphInstances | null;
@@ -15,6 +16,7 @@ export class GraphControlsUI extends Component {
     sectionSettings: GCOptions;
     ccNodeFactor: CCNodeFactorSection; // [CC]
     ccEGToggle: HeaderToggle; // [CC]
+    ccOptionCC?: CCOptionCCSection; // [CC] global graph only
 
     constructor(view: GraphView | LocalGraphView) {
         super();
@@ -24,6 +26,7 @@ export class GraphControlsUI extends Component {
         this.ccEGToggle = setupExtendedGraphSection(view, this.sectionSettings.root); // [CC] rename + title switch
         this.ccNodeFactor = new CCNodeFactorSection(view); // [CC]
         this.addChild(this.ccNodeFactor); // [CC]
+        if (view.getViewType() === "graph") { this.ccOptionCC = new CCOptionCCSection(view); this.addChild(this.ccOptionCC); } // [CC]
     }
 
     onPluginEnabled(instances: GraphInstances): void {
@@ -31,11 +34,13 @@ export class GraphControlsUI extends Component {
         this.sectionSettings.onPluginEnabled(instances);
         this.ccNodeFactor.onPluginEnabled(); // [CC]
         this.ccEGToggle.set(true); // [CC]
+        this.ccOptionCC?.onPluginEnabled(); // [CC]
     }
 
     onPluginDisabled(): void {
         this.sectionSettings.onPluginDisabled();
         this.ccNodeFactor.onPluginDisabled(); // [CC]
         this.ccEGToggle.set(false); // [CC]
+        this.ccOptionCC?.onPluginDisabled(); // [CC]
     }
 }
