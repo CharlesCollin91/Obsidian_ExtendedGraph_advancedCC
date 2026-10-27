@@ -1,5 +1,5 @@
 /*
- * GraphView CC — badge at the top of the plugin settings:
+ * ExtendedGraph_advancedCC — badge at the top of the plugin settings:
  * version, session log path, compact mode switch and hidden-groups counter.
  */
 import { ToggleComponent } from "obsidian";
@@ -13,7 +13,7 @@ export function addCCVersionBadge(container: HTMLElement, settings?: EGSettingsV
 
     const top = badge.createDiv({ cls: "graphview-cc-badge-row" });
     const title = top.createDiv();
-    title.createSpan({ cls: "graphview-cc-badge-version", text: `GraphView CC v${CC_VERSION}` });
+    title.createSpan({ cls: "graphview-cc-badge-version", text: `ExtendedGraph_advancedCC v${CC_VERSION}` });
     title.createSpan({ cls: "graphview-cc-badge-base", text: "based on Extended Graph 2.7.6" });
 
     const sw = top.createDiv({ cls: "graphview-cc-compact-switch" });

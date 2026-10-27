@@ -1,5 +1,5 @@
 /*
- * GraphView CC — re-implementation of the Obsidian search syntax (as used in graph Groups).
+ * ExtendedGraph_advancedCC — re-implementation of the Obsidian search syntax (as used in graph Groups).
  * Obsidian's own search engine is private and cannot be called by plugins, so we follow
  * https://obsidian.md/help/plugins/search as closely as possible.
  *

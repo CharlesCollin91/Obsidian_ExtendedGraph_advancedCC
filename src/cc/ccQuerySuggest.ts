@@ -1,5 +1,5 @@
 /*
- * GraphView CC — "Search options" popup for query inputs, like the one in graph Groups.
+ * ExtendedGraph_advancedCC — "Search options" popup for query inputs, like the one in graph Groups.
  * Shows the operators on click; after "tag:" lists the vault tags; after "[" lists the
  * properties; after "file:" proposes the first symbols used in note names ("starts with").
  */

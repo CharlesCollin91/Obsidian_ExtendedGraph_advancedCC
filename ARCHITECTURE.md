@@ -1,8 +1,8 @@
-# Architecture — GraphView CC
+# Architecture — ExtendedGraph_advancedCC
 
-GraphView CC is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) (ElsaTam).
+ExtendedGraph_advancedCC is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) (ElsaTam).
 Extended Graph hooks Obsidian's private core graph (renderer, engine, nodes) through JavaScript proxies.
-GraphView CC keeps all of it and adds its own layer, kept **separate** so upstream updates can be merged.
+ExtendedGraph_advancedCC keeps all of it and adds its own layer, kept **separate** so upstream updates can be merged.
 
 ## Design decisions
 - **All our code lives in `src/cc/`.** Upstream files only get a few one-line hooks, each marked `// [CC]`

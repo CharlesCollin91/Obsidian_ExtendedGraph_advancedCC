@@ -1,7 +1,7 @@
 {
-	"name": "graphview-cc",
-	"version": "1.14.0",
-	"description": "GraphView CC: fork of Extended Graph for Obsidian (https://obsidian.md)",
+	"name": "extendedgraph-advancedcc",
+	"version": "1.15.0",
+	"description": "ExtendedGraph_advancedCC: fork of Extended Graph for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

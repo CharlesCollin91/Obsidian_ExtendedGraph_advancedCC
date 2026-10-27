@@ -1,5 +1,5 @@
 /*
- * GraphView CC — helpers for the graph controls panel (right side of the graph view):
+ * ExtendedGraph_advancedCC — helpers for the graph controls panel (right side of the graph view):
  *  - an on/off switch at the far right of a section title,
  *  - the same margin at the bottom of the panel as at the top.
  */

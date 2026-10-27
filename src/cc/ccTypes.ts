@@ -1,5 +1,5 @@
 /*
- * GraphView CC — small structural types for the Obsidian / Extended Graph internals we touch.
+ * ExtendedGraph_advancedCC — small structural types for the Obsidian / Extended Graph internals we touch.
  * (Obsidian's graph API is private: these describe only the members we read.)
  */
 

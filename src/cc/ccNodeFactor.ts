@@ -1,5 +1,5 @@
 /*
- * GraphView CC — NodeFactor: node size from a user-controlled formula.
+ * ExtendedGraph_advancedCC — NodeFactor: node size from a user-controlled formula.
  *
  *   X = number of linked notes matching query X   ("notes feeders")
  *   Y = number of linked notes matching query Y   (linked themes)

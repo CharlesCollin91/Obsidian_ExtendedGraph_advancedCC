@@ -1,5 +1,5 @@
 /*
- * GraphView CC — "+ Add query" under the search box of the native "Filters" section.
+ * ExtendedGraph_advancedCC — "+ Add query" under the search box of the native "Filters" section.
  * Each extra row has an AND/OR operator and a query. The full query is composed left to right:
  *     ((main) AND (row1)) OR (row2) ...
  * and handed to Obsidian's own engine (engine.updateSearch is wrapped: for the duration of the call

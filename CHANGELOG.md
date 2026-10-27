@@ -1,7 +1,11 @@
 # Changelog
 
-All notable changes to GraphView CC. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to ExtendedGraph_advancedCC. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Based on Extended Graph 2.7.6 (upstream commit `c1aab34`).
+
+## [1.15.0] - 2026-10-27
+### Changed
+- Plugin renamed **ExtendedGraph_advancedCC** (id `extendedgraph-advancedcc`), matching the repository name.
 
 ## [1.14.0] - 2026-10-27
 ### Added

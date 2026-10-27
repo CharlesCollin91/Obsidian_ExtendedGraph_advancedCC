@@ -32,7 +32,7 @@ export class GCOptions extends GCSection {
     override display(enable: boolean) {
         this.treeItemChildren.replaceChildren();
 
-        // [CC] egShow(): compact options (GraphView CC setting)
+        // [CC] egShow(): compact options (ExtendedGraph_advancedCC setting)
         if (enable && egShow("importConfig")) this.createImportConfig();
         if (egShow("saveForDefaultState")) this.createSaveForDefaultState();
         if (enable && egShow("saveForNormalState")) this.createSaveForNormalState();

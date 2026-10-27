@@ -1,5 +1,5 @@
 /*
- * GraphView CC — "OptionCC" section for the GLOBAL graph: brings the local-graph options
+ * ExtendedGraph_advancedCC — "OptionCC" section for the GLOBAL graph: brings the local-graph options
  * (Depth, Incoming links, Outgoing links, Neighbor links) with the same mechanism as Obsidian:
  *   center = the note currently open (last opened markdown note),
  *   keep the notes reachable from the center in at most `depth` jumps, following
@@ -196,7 +196,7 @@ export class CCOptionCCSection extends Component {
         this.headToggle.set(s.enabled);
         this.headToggle.setDisabled(!this.enabled);
         if (!this.enabled) {
-            c.createDiv({ cls: "graphview-cc-nf-note", text: "Enable GraphView CC on this graph to use OptionCC." });
+            c.createDiv({ cls: "graphview-cc-nf-note", text: "Enable ExtendedGraph_advancedCC on this graph to use OptionCC." });
             return;
         }
         // Depth (slider, like the local graph)

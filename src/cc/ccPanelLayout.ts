@@ -1,5 +1,5 @@
 /*
- * GraphView CC — layout of the graph controls panel:
+ * ExtendedGraph_advancedCC — layout of the graph controls panel:
  *   order:  Filters · Node Color · Node Repartition · Node Weight · Node level · Extended Graph · (others) · Options
  *   Node Repartition = native "Display" + "Forces" merged (one title, both contents; folding together)
  *   renames: Groups -> Node Color, Display -> Node Repartition (ExtendedGraph/NodeFactor/OptionCC renamed where created)

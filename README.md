@@ -2,7 +2,7 @@
 
 <br>
 
-**The plugin** : An [Obsidian](https://obsidian.md) plugin (shown in Obsidian as **GraphView CC**) that pushes the core graph view further. It is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) by ElsaTam, with a reorganized graph panel and new ways to read your notes' hierarchy.
+**The plugin** : An [Obsidian](https://obsidian.md) plugin (shown in Obsidian as **ExtendedGraph_advancedCC**) that pushes the core graph view further. It is a fork of [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) by ElsaTam, with a reorganized graph panel and new ways to read your notes' hierarchy.
 
 <br>
 
@@ -12,16 +12,16 @@
 - **Filters**: "+ Add query" rows under the search box, combined with AND / OR.
 - A cleaner panel: Filters · Node Color · Node Repartition · Node Weight · Node level · Extended Graph · Options, with on/off switches in the section titles, plus a compact mode for the settings page.
 
-**Actual Plugin Version** : 1.14.0 <br>
+**Actual Plugin Version** : 1.15.0 <br>
 **License** : [GPL-3.0-only](LICENSE)
 
 ## Requirements
 Obsidian 1.7 or later, desktop only. No extra plugin needed. Do not enable it together with Extended Graph in the same vault: both take over the same graph view.
 
 ## Install
-1. In Obsidian: Settings → Community plugins → Browse → search **GraphView CC** → Install → Enable.
+1. In Obsidian: Settings → Community plugins → Browse → search **ExtendedGraph_advancedCC** → Install → Enable.
    Until it is listed there: install the **BRAT** plugin, then BRAT → Add beta plugin → `CharlesCollin91/Obsidian_ExtendedGraph_advancedCC`.
-2. Open the graph view: the GraphView CC sections are in the panel on the right.
+2. Open the graph view: the ExtendedGraph_advancedCC sections are in the panel on the right.
 
 ## How to
 1. Open the graph view and switch the plugin on (Extended Graph switch in the panel).
@@ -38,7 +38,7 @@ Queries use the Obsidian search syntax. Note that `file:(` matches "(" anywhere 
 
 ## Disclosures
 - No network use, no telemetry, no account.
-- Optional debug log (off by default: Settings → GraphView CC → Other settings → Debug log): when on, it writes one diagnostic file per session in the plugin folder (`.obsidian/plugins/graphview-cc/logs/`). Nothing leaves your computer.
+- Optional debug log (off by default: Settings → ExtendedGraph_advancedCC → Other settings → Debug log): when on, it writes one diagnostic file per session in the plugin folder (`.obsidian/plugins/extendedgraph-advancedcc/logs/`). Nothing leaves your computer.
 
 ## Credits
 Built on [Extended Graph](https://github.com/ElsaTam/obsidian-extended-graph) by **ElsaTam** (original author and contributor), itself crediting [obsidian-typings](https://github.com/Fevol/obsidian-typings), [graph-analysis](https://github.com/SkepticMystic/graph-analysis) and [js-colormaps](https://github.com/timothygebhard/js-colormaps). All Extended Graph features remain available; see its [wiki](https://github.com/ElsaTam/obsidian-extended-graph/wiki).

@@ -1,5 +1,5 @@
 /*
- * GraphView CC — "NodeFactor" section in the graph controls panel (right side of the graph view).
+ * ExtendedGraph_advancedCC — "NodeFactor" section in the graph controls panel (right side of the graph view).
  * UI only: the computation lives in ccNodeFactor.ts.
  *
  * Layout is built for a narrow panel: one full-width row per control,
@@ -150,7 +150,7 @@ export class CCNodeFactorSection extends Component {
         this.headToggle?.setDisabled(!this.enabled);
 
         if (!this.enabled) {
-            c.createDiv({ cls: "graphview-cc-nf-note", text: "Enable GraphView CC on this graph to use NodeFactor." });
+            c.createDiv({ cls: "graphview-cc-nf-note", text: "Enable ExtendedGraph_advancedCC on this graph to use NodeFactor." });
             return;
         }
 

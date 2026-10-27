@@ -36,7 +36,7 @@ releases.csv
 data with group.json
 benchmarks/
 
-# GraphView CC: local settings, debug logs, dev tools
+# ExtendedGraph_advancedCC: local settings, debug logs, dev tools
 cc-settings.json
 logs/
 *.log

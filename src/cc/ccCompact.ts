@@ -1,5 +1,5 @@
 /*
- * GraphView CC — Compact mode for the plugin settings page.
+ * ExtendedGraph_advancedCC — Compact mode for the plugin settings page.
  *
  * Each settings group (top-level setting or feature section) gets a pin.
  * Compact mode ON  -> only pinned groups are shown.

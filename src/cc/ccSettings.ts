@@ -1,5 +1,5 @@
 /*
- * GraphView CC — our own settings, stored in <plugin folder>/cc-settings.json
+ * ExtendedGraph_advancedCC — our own settings, stored in <plugin folder>/cc-settings.json
  * (separate from Extended Graph's data.json; never shipped by a release).
  */
 import { Plugin } from "obsidian";

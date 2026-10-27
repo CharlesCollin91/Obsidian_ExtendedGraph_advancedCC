@@ -1,5 +1,5 @@
 /*
- * GraphView CC — optional debug log (OFF by default; Settings → Other settings → Debug log).
+ * ExtendedGraph_advancedCC — optional debug log (OFF by default; Settings → Other settings → Debug log).
  * When ON, writes one file per Obsidian session in <plugin folder>/logs/ so problems can be
  * diagnosed without the developer console. Nothing leaves the computer.
  *
@@ -11,7 +11,7 @@ import * as fs from "fs";
 import * as path from "path";
 import type { EGSettingsView, FeatureFlags, GraphViewLike } from "./ccTypes";
 
-export const CC_VERSION = "1.14.0";
+export const CC_VERSION = "1.15.0";
 
 type Level = "INIT" | "INFO" | "VIEW" | "ENABLE" | "DISABLE" | "NOTICE" | "WARN" | "ERROR" | "TEST" | "CLOSE";
 
@@ -84,7 +84,7 @@ export class CCLogger {
             if (this.settings) this.logSettings(this.settings);
         } catch (e) {
             this.file = null;
-            console.error("[GraphView CC] debug log could not start:", e);
+            console.error("[ExtendedGraph_advancedCC] debug log could not start:", e);
         }
     }
 
@@ -155,7 +155,7 @@ export class CCLogger {
         if (!p || !this.file) return;
         const lines = [
             "=".repeat(78),
-            `GraphView CC v${CC_VERSION}  (manifest ${p.manifest.version}, based on Extended Graph 2.7.6)`,
+            `ExtendedGraph_advancedCC v${CC_VERSION}  (manifest ${p.manifest.version}, based on Extended Graph 2.7.6)`,
             `Session start : ${this.timestamp()}`,
             `Obsidian API  : ${apiVersion}   Platform: ${Platform.isWin ? "Windows" : Platform.isMacOS ? "macOS" : "other"}`,
             `Vault         : ${p.app.vault.getName()}`,
@@ -228,7 +228,7 @@ export class CCLogger {
 
     private static isOurs(text?: string): boolean {
         if (!text) return false;
-        const id = this.plugin?.manifest.id ?? "graphview-cc";
+        const id = this.plugin?.manifest.id ?? "extendedgraph-advancedcc";
         return text.includes(`plugins/${id}`) || text.includes(`plugin:${id}`);
     }
 

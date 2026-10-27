@@ -1,5 +1,5 @@
 /*
- * GraphView CC — the Extended Graph "Options" section of the graph panel, renamed "Extended Graph":
+ * ExtendedGraph_advancedCC — the Extended Graph "Options" section of the graph panel, renamed "Extended Graph":
  *  - on/off switch in its title (enables/disables Extended Graph on this graph view),
  *  - compact options, and the "Other settings" section at the end of the plugin settings page.
  */
