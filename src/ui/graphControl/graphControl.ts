@@ -5,7 +5,8 @@ import { CCNodeFactorSection } from "../../cc/ccNodeFactorUI"; // [CC]
 import { setupExtendedGraphSection } from "../../cc/ccExtendedGraphPanel"; // [CC]
 import { HeaderToggle } from "../../cc/ccPanel"; // [CC]
 import { CCOptionCCSection } from "../../cc/ccOptionCC"; // [CC]
-import { CCFilterRows, renameGroupsSection } from "../../cc/ccFilterRows"; // [CC]
+import { CCFilterRows } from "../../cc/ccFilterRows"; // [CC]
+import type { SearchEngineLike } from "../../cc/ccTypes"; // [CC]
 import { applyPanelLayout, CCOptionsSection } from "../../cc/ccPanelLayout"; // [CC]
 
 export class GraphControlsUI extends Component {
@@ -27,7 +28,6 @@ export class GraphControlsUI extends Component {
         this.graphControls = view.contentEl.querySelector(".graph-controls") as HTMLElement;
         this.sectionSettings = new GCOptions(view);
         this.ccEGToggle = setupExtendedGraphSection(view, this.sectionSettings.root); // [CC] rename + title switch
-        renameGroupsSection(view); // [CC] "Groups" -> "Color by group"
         this.ccFilterRows = new CCFilterRows(view); // [CC]
         this.addChild(new CCOptionsSection(view)); // [CC] empty "Options", last
         applyPanelLayout(view); // [CC] names, Display+Forces merge, order
@@ -42,7 +42,7 @@ export class GraphControlsUI extends Component {
         this.ccNodeFactor.onPluginEnabled(); // [CC]
         this.ccEGToggle.set(true); // [CC]
         this.ccOptionCC?.onPluginEnabled(); // [CC]
-        this.ccFilterRows.enable(instances.engine); // [CC]
+        this.ccFilterRows.enable(instances.engine as unknown as SearchEngineLike); // [CC]
         window.setTimeout(() => applyPanelLayout(this.view), 0); // [CC] sections added on enable (folders…)
     }
 

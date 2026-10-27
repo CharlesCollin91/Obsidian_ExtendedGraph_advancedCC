@@ -1,42 +1,77 @@
 /*
- * GraphView CC — runtime session logger.
- * Writes one log file per Obsidian session so bugs can be diagnosed
- * without copy-pasting anything from the developer console.
+ * GraphView CC — optional debug log (OFF by default; Settings → Other settings → Debug log).
+ * When ON, writes one file per Obsidian session in <plugin folder>/logs/ so problems can be
+ * diagnosed without the developer console. Nothing leaves the computer.
  *
- * Location rule ("refuse rather than write in the wrong place"):
- *   - if the plugin folder is a junction to <dev>\plugin and <dev>\logs exists,
- *     logs go to <dev>\logs\  (Charles' development folder);
- *   - otherwise they go to <plugin folder>\logs\.
+ * Development setup: if the plugin folder is a directory junction to <dev>/plugin and
+ * <dev>/logs + <dev>/zzold exist, the log goes to <dev>/logs instead.
  */
-import { App, apiVersion, FileSystemAdapter, Plugin, Platform } from "obsidian";
+import { apiVersion, EventRef, FileSystemAdapter, Platform, Plugin } from "obsidian";
 import * as fs from "fs";
 import * as path from "path";
+import type { EGSettingsView, FeatureFlags, GraphViewLike } from "./ccTypes";
 
-export const CC_VERSION = "1.12.0";
+export const CC_VERSION = "1.13.0";
 
 type Level = "INIT" | "INFO" | "VIEW" | "ENABLE" | "DISABLE" | "NOTICE" | "WARN" | "ERROR" | "TEST" | "CLOSE";
 
+/** Extended Graph's own workspace events. */
+interface EGWorkspace {
+    on(name: "extended-graph:enabled-in-view" | "extended-graph:disabled-in-view", cb: (view: GraphViewLike) => void): EventRef;
+}
+
 export class CCLogger {
     private static file: string | null = null;
-    private static app: App | null = null;
     private static plugin: Plugin | null = null;
+    private static pluginDir: string | null = null;
     private static origWarn: typeof console.warn | null = null;
     private static origError: typeof console.error | null = null;
     private static noticeObserver: MutationObserver | null = null;
     private static onWindowError: ((e: ErrorEvent) => void) | null = null;
     private static onRejection: ((e: PromiseRejectionEvent) => void) | null = null;
+    private static eventRefs: EventRef[] = [];
     private static writing = false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static settings: any = null;
+    private static settings: EGSettingsView | null = null;
 
     // ============================== LIFECYCLE ==============================
 
+    /** Called first in onload: starts logging only if the saved setting says so. */
     static init(plugin: Plugin): void {
+        this.plugin = plugin;
+        const adapter = plugin.app.vault.adapter;
+        if (!(adapter instanceof FileSystemAdapter) || !plugin.manifest.dir) return;
+        this.pluginDir = adapter.getFullPath(plugin.manifest.dir);
+        if (this.savedDebugLog()) this.start();
+    }
+
+    static get isOn(): boolean { return this.file !== null; }
+    static get logFile(): string | null { return this.file; }
+
+    /** Turns the debug log on/off live (setting toggle). */
+    static setEnabled(on: boolean): void {
+        if (on && !this.file) this.start();
+        if (!on && this.file) this.close();
+    }
+
+    static close(): void {
+        this.log("CLOSE", "debug log stopped");
+        if (this.origWarn) console.warn = this.origWarn;
+        if (this.origError) console.error = this.origError;
+        this.noticeObserver?.disconnect();
+        if (this.onWindowError) window.removeEventListener("error", this.onWindowError);
+        if (this.onRejection) window.removeEventListener("unhandledrejection", this.onRejection);
+        this.eventRefs.forEach(ref => this.plugin?.app.workspace.offref(ref));
+        this.eventRefs = [];
+        this.origWarn = this.origError = null;
+        this.noticeObserver = null;
+        this.file = null;
+    }
+
+    private static start(): void {
+        const plugin = this.plugin;
+        const dir = this.resolveLogsDir();
+        if (!plugin || !dir) return;
         try {
-            this.plugin = plugin;
-            this.app = plugin.app;
-            const dir = this.resolveLogsDir(plugin);
-            if (!dir) return;
             fs.mkdirSync(dir, { recursive: true });
             const stamp = this.timestamp().replace(/[: ]/g, "-").replace(/\.\d+$/, "");
             this.file = path.join(dir, `session_${stamp}.log`);
@@ -45,35 +80,29 @@ export class CCLogger {
             this.hookNotices();
             this.hookGlobalErrors();
             this.hookGraphEvents(plugin);
-            // Notes are only indexed once the layout is ready: count them there, not at onload.
             plugin.app.workspace.onLayoutReady(() => this.logVaultReady());
+            if (this.settings) this.logSettings(this.settings);
         } catch (e) {
             this.file = null;
-            console.error("[GraphView CC] logger init failed:", e);
+            console.error("[GraphView CC] debug log could not start:", e);
         }
     }
 
-    static close(): void {
-        this.log("CLOSE", "plugin unloaded");
-        if (this.origWarn) console.warn = this.origWarn;
-        if (this.origError) console.error = this.origError;
-        this.noticeObserver?.disconnect();
-        if (this.onWindowError) window.removeEventListener("error", this.onWindowError);
-        if (this.onRejection) window.removeEventListener("unhandledrejection", this.onRejection);
-        this.origWarn = this.origError = null;
-        this.noticeObserver = null;
-        this.file = null;
-    }
-
-    static get logFile(): string | null {
-        return this.file;
+    /** cc-settings.json is read synchronously here: the log must start before anything else loads. */
+    private static savedDebugLog(): boolean {
+        try {
+            const raw = fs.readFileSync(path.join(this.pluginDir ?? "", "cc-settings.json"), "utf8");
+            return (JSON.parse(raw) as { debugLog?: boolean }).debugLog === true;
+        } catch {
+            return false;
+        }
     }
 
     // =============================== WRITING ===============================
 
     static log(level: Level, message: string): void {
         if (!this.file || this.writing) return;
-        this.writing = true; // guards against recursion through hooked console
+        this.writing = true; // guards against recursion through the hooked console
         try {
             const line = `${this.timestamp()}  ${level.padEnd(7)}  ${message.replace(/\r?\n/g, "\n                                    ")}\n`;
             fs.appendFileSync(this.file, line, "utf8");
@@ -85,33 +114,34 @@ export class CCLogger {
     }
 
     static error(context: string, err: unknown): void {
-        const e = err as Error;
+        const e = err instanceof Error ? err : null;
         this.log("ERROR", `${context}: ${e?.message ?? String(err)}${e?.stack ? "\n" + e.stack : ""}`);
     }
 
-    /** Self-test run from the command palette: proves the log is written and summarizes graph views. */
+    /** Self-test (command palette): proves the log is written and summarizes graph views. */
     static selfTest(): string {
-        if (!this.app) return "Logger not initialized";
-        const leaves = [
-            ...this.app.workspace.getLeavesOfType("graph"),
-            ...this.app.workspace.getLeavesOfType("localgraph"),
-        ];
-        const files = this.app.vault.getMarkdownFiles().length;
-        this.log("TEST", `self-test: ${files} markdown files, ${leaves.length} graph view(s) open`);
-        for (const leaf of leaves) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const renderer = (leaf.view as any)?.renderer;
-            this.log("TEST", `  view ${leaf.view.getViewType()} id=${(leaf as any).id}: ${renderer?.nodes?.length ?? "?"} nodes, ${renderer?.links?.length ?? "?"} links`);
-        }
-        return this.file ?? "no log file";
+        const app = this.plugin?.app;
+        if (!app || !this.file) return "debug log is off (Settings → Other settings → Debug log)";
+        const leaves = [...app.workspace.getLeavesOfType("graph"), ...app.workspace.getLeavesOfType("localgraph")];
+        this.log("TEST", `self-test: ${app.vault.getMarkdownFiles().length} markdown files, ${leaves.length} graph view(s) open`);
+        for (const leaf of leaves) this.log("TEST", `  view ${this.describe(leaf.view)}`);
+        return this.file;
+    }
+
+    /** Key settings: the ones that most often explain "nothing happens". */
+    static logSettings(s: EGSettingsView): void {
+        this.settings = s;
+        const on = (g: FeatureFlags | undefined) => g ? Object.entries(g).filter(([, v]) => v).map(([k]) => k).join(", ") || "none" : "?";
+        this.log("INIT", `settings loaded: maxNodes=${s.maxNodes}, delay=${s.delay}ms, startingState=${s.startingStateID}`);
+        this.log("INIT", `features ON (global graph): ${on(s.enableFeatures?.graph)}`);
+        this.log("INIT", `features ON (local graph) : ${on(s.enableFeatures?.localgraph)}`);
     }
 
     // =============================== HELPERS ===============================
 
-    private static resolveLogsDir(plugin: Plugin): string | null {
-        const adapter = plugin.app.vault.adapter;
-        if (!(adapter instanceof FileSystemAdapter) || !plugin.manifest.dir) return null;
-        const pluginDir = adapter.getFullPath(plugin.manifest.dir);
+    private static resolveLogsDir(): string | null {
+        const pluginDir = this.pluginDir;
+        if (!pluginDir) return null;
         let realDir = pluginDir;
         try { realDir = fs.realpathSync(pluginDir); } catch { /* keep pluginDir */ }
         const devLogs = path.join(path.dirname(realDir), "logs");
@@ -121,55 +151,35 @@ export class CCLogger {
     }
 
     private static writeHeader(): void {
-        const p = this.plugin!;
-        const app = this.app!;
+        const p = this.plugin;
+        if (!p || !this.file) return;
         const lines = [
             "=".repeat(78),
             `GraphView CC v${CC_VERSION}  (manifest ${p.manifest.version}, based on Extended Graph 2.7.6)`,
             `Session start : ${this.timestamp()}`,
             `Obsidian API  : ${apiVersion}   Platform: ${Platform.isWin ? "Windows" : Platform.isMacOS ? "macOS" : "other"}`,
-            `Vault         : ${app.vault.getName()}`,
+            `Vault         : ${p.app.vault.getName()}`,
             `Log file      : ${this.file}`,
             "=".repeat(78),
             "",
         ];
-        fs.appendFileSync(this.file!, lines.join("\n") + "\n", "utf8");
+        fs.appendFileSync(this.file, lines.join("\n") + "\n", "utf8");
     }
 
-    /** Key settings after load: the ones that most often explain "nothing happens". */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static logSettings(s: any): void {
-        try {
-            const on = (g: Record<string, boolean> | undefined) =>
-                g ? Object.entries(g).filter(([, v]) => v).map(([k]) => k).join(", ") || "none" : "?";
-            this.log("INIT", `settings loaded: maxNodes=${s?.maxNodes}, delay=${s?.delay}ms, startingState=${s?.startingStateID}`);
-            this.log("INIT", `features ON (global graph): ${on(s?.enableFeatures?.graph)}`);
-            this.log("INIT", `features ON (local graph) : ${on(s?.enableFeatures?.localgraph)}`);
-            this.settings = s;
-        } catch (e) {
-            this.error("logSettings", e);
-        }
-    }
-
-    /** Runs once Obsidian has indexed the vault. */
     private static logVaultReady(): void {
-        try {
-            const files = this.app?.vault.getMarkdownFiles().length ?? 0;
-            this.log("INIT", `vault ready: ${files} markdown files`);
-            const max = this.settings?.maxNodes;
-            if (max !== undefined && files > max) {
-                this.log("WARN", `vault has ${files} notes but maxNodes=${max}: the plugin will refuse to enable on a full graph (Settings > Performances)`);
-            }
-        } catch (e) {
-            this.error("logVaultReady", e);
+        const files = this.plugin?.app.vault.getMarkdownFiles().length ?? 0;
+        this.log("INIT", `vault ready: ${files} markdown files`);
+        const max = this.settings?.maxNodes;
+        if (max !== undefined && files > max) {
+            this.log("WARN", `vault has ${files} notes but maxNodes=${max}: Extended Graph will refuse to enable on a full graph (Settings > Performances)`);
         }
     }
 
     private static hookConsole(): void {
-        this.origWarn = console.warn;
-        this.origError = console.error;
-        const fmt = (args: unknown[]) => args.map(a => a instanceof Error ? `${a.message}\n${a.stack}` : typeof a === "string" ? a : this.safeJson(a)).join(" ");
-        const ow = this.origWarn, oe = this.origError;
+        const ow = console.warn, oe = console.error;
+        this.origWarn = ow;
+        this.origError = oe;
+        const fmt = (args: unknown[]) => args.map(a => a instanceof Error ? `${a.message}\n${a.stack ?? ""}` : typeof a === "string" ? a : this.safeJson(a)).join(" ");
         console.warn = (...args: unknown[]) => { this.log("WARN", fmt(args)); ow.apply(console, args); };
         console.error = (...args: unknown[]) => { this.log("ERROR", fmt(args)); oe.apply(console, args); };
     }
@@ -179,42 +189,47 @@ export class CCLogger {
         this.noticeObserver = new MutationObserver(muts => {
             for (const m of muts) {
                 m.addedNodes.forEach(n => {
-                    const el = n as HTMLElement;
-                    if (el.classList?.contains("notice")) this.log("NOTICE", el.innerText.trim());
+                    if (n.instanceOf(HTMLElement) && n.classList.contains("notice")) this.log("NOTICE", n.innerText.trim());
                 });
             }
         });
-        const target = document.body.querySelector(".notice-container") ?? document.body;
-        this.noticeObserver.observe(target, { childList: true, subtree: true });
+        this.noticeObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     private static hookGlobalErrors(): void {
         this.onWindowError = (e: ErrorEvent) => {
-            if (this.isOurs(e.filename) || this.isOurs(e.error?.stack)) this.error("uncaught", e.error ?? e.message);
+            const err: unknown = e.error;
+            const stack = err instanceof Error ? err.stack : undefined;
+            if (this.isOurs(e.filename) || this.isOurs(stack)) this.error("uncaught", err ?? e.message);
         };
         this.onRejection = (e: PromiseRejectionEvent) => {
-            const stack = (e.reason as Error)?.stack;
-            if (this.isOurs(stack)) this.error("unhandled promise", e.reason);
+            const reason: unknown = e.reason;
+            if (reason instanceof Error && this.isOurs(reason.stack)) this.error("unhandled promise", reason);
         };
         window.addEventListener("error", this.onWindowError);
         window.addEventListener("unhandledrejection", this.onRejection);
     }
 
     private static hookGraphEvents(plugin: Plugin): void {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const ws = plugin.app.workspace as any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const describe = (view: any) => `${view?.getViewType?.()} id=${view?.leaf?.id}: ${view?.renderer?.nodes?.length ?? "?"} nodes, ${view?.renderer?.links?.length ?? "?"} links`;
-        plugin.registerEvent(ws.on("extended-graph:enabled-in-view", (view: unknown) => this.log("ENABLE", describe(view))));
-        plugin.registerEvent(ws.on("extended-graph:disabled-in-view", (view: unknown) => this.log("DISABLE", describe(view))));
-        plugin.registerEvent(plugin.app.workspace.on("layout-change", () => {
-            const n = plugin.app.workspace.getLeavesOfType("graph").length + plugin.app.workspace.getLeavesOfType("localgraph").length;
-            this.log("VIEW", `layout changed: ${n} graph view(s) open`);
-        }));
+        const ws = plugin.app.workspace as unknown as EGWorkspace;
+        this.eventRefs.push(
+            ws.on("extended-graph:enabled-in-view", view => this.log("ENABLE", this.describe(view))),
+            ws.on("extended-graph:disabled-in-view", view => this.log("DISABLE", this.describe(view))),
+            plugin.app.workspace.on("layout-change", () => {
+                const n = plugin.app.workspace.getLeavesOfType("graph").length + plugin.app.workspace.getLeavesOfType("localgraph").length;
+                this.log("VIEW", `layout changed: ${n} graph view(s) open`);
+            }),
+        );
+    }
+
+    private static describe(view: GraphViewLike): string {
+        return `${view.getViewType?.() ?? "?"} id=${view.leaf?.id ?? "?"}: ${view.renderer?.nodes?.length ?? "?"} nodes, ${view.renderer?.links?.length ?? "?"} links`;
     }
 
     private static isOurs(text?: string): boolean {
-        return !!text && !!this.plugin && text.includes(`plugins/${this.plugin.manifest.id}`) || !!text && text.includes("plugin:graphview-cc");
+        if (!text) return false;
+        const id = this.plugin?.manifest.id ?? "graphview-cc";
+        return text.includes(`plugins/${id}`) || text.includes(`plugin:${id}`);
     }
 
     private static safeJson(v: unknown): string {

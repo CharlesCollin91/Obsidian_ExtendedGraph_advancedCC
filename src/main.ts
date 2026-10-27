@@ -25,7 +25,7 @@ import {
 
 import { CCLogger } from "./cc/ccLogger"; // [CC]
 import { addCCCommands } from "./cc/ccCommands"; // [CC]
-import { CCSettings } from "./cc/ccCompact"; // [CC]
+import { CCSettings } from "./cc/ccSettings"; // [CC]
 import { CCNodeFactor } from "./cc/ccNodeFactor"; // [CC]
 import { CCNodeFactorSection, registerNodeFactorEvents } from "./cc/ccNodeFactorUI"; // [CC]
 import { CCOptionCC, CCOptionCCSection, registerOptionCCEvents } from "./cc/ccOptionCC"; // [CC]

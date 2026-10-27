@@ -8,11 +8,12 @@
  * Applied on the graph data after Obsidian's search filter (graphEventsDispatcher.updateData).
  */
 import { App, Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, ToggleComponent } from "obsidian";
-import { GraphView, LocalGraphView } from "obsidian-typings";
+import type { GraphData, GraphView, LocalGraphView } from "obsidian-typings";
 import { addHeaderToggle, HeaderToggle } from "./ccPanel";
-import { CCSettings } from "./ccCompact";
+import { CCSettings } from "./ccSettings";
 import { CCLogger } from "./ccLogger";
 import { ExtendedGraphInstances } from "../internal";
+
 
 export interface OptionCCSettings {
     enabled: boolean;
@@ -24,8 +25,7 @@ export interface OptionCCSettings {
 
 export const OPTIONCC_DEFAULTS: OptionCCSettings = { enabled: false, depth: 1, incoming: true, outgoing: true, neighbor: false };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Data = { nodes: Record<string, any>; numLinks: number };
+type Data = GraphData;
 
 // ================================ CORE =================================
 
@@ -55,7 +55,7 @@ export function applyDepthFilter(data: Data, center: string | null, s: OptionCCS
     }
 
     // Links: jump links (consecutive depths, allowed direction) + all others if Neighbor links
-    const nodes: Record<string, unknown> = {};
+    const nodes: GraphData["nodes"] = {};
     let numLinks = 0;
     for (const [id, d] of dist) {
         const node = data.nodes[id];
@@ -87,8 +87,7 @@ export class CCOptionCC {
     static notify(): void { this.listeners.forEach(cb => cb()); }
 
     /** Hook called by graphEventsDispatcher.updateData (global graph only). */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static filter(graphType: string, data: any): any {
+    static filter(graphType: string, data: GraphData): GraphData {
         if (graphType !== "graph" || !this.settings.enabled) return data;
         const before = Object.keys(data.nodes).length;
         const r = applyDepthFilter(data, this.center, this.settings);
@@ -155,13 +154,13 @@ export class CCOptionCCSection extends Component {
     constructor(view: GraphView | LocalGraphView) {
         super();
         const controls = view.contentEl.querySelector(".graph-controls") as HTMLElement;
-        controls.querySelectorAll(".mod-graphview-cc-optioncc").forEach(el => el.remove());
+        controls.querySelectorAll(".mod-graphview-cc-optioncc").forEach(el => el.remove()); // stale copy (hot reload)
         CCOptionCCSection.live.add(this);
         this.root = controls.createDiv("tree-item graph-control-section mod-graphview-cc-optioncc is-collapsed");
         const head = this.root.createDiv("tree-item-self mod-collapsible");
         this.collapseIcon = head.createDiv("tree-item-icon collapse-icon is-collapsed");
         setIcon(this.collapseIcon, "right-triangle");
-        setIcon(head.createDiv("tree-item-header-icon"), "focus");
+        setIcon(head.createDiv("tree-item-header-icon"), "radar");
         head.createDiv("tree-item-inner").createEl("header", { cls: "graph-control-section-header", text: "Node level" });
         head.onClickEvent(() => this.isCollapsed ? this.open() : this.close());
         this.headToggle = addHeaderToggle(this.root, HELP.enable, CCOptionCC.settings.enabled, v => {

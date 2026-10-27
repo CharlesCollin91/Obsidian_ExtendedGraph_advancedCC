@@ -8,7 +8,7 @@
 import { App, Component, debounce, Plugin, setIcon, setTooltip, SliderComponent, TextComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
 import { CCNodeFactor, formulaText, NodeFactorSettings, rowsText } from "./ccNodeFactor";
-import { CCSettings } from "./ccCompact";
+import { CCSettings } from "./ccSettings";
 import { CCQuery } from "./ccQuery";
 import { CCQuerySuggest } from "./ccQuerySuggest";
 import { addHeaderToggle, equalizePanelMargins, HeaderToggle } from "./ccPanel";
@@ -141,7 +141,7 @@ export class CCNodeFactorSection extends Component {
         // Equation: simplified label, accurate formula in the (?) tooltip (kept up to date)
         const eq = this.row(c, EQUATION_LABEL, equationHelp(s));
         eq.head.addClass("graphview-cc-nf-equation");
-        this.equationHelpEl = eq.head.querySelector(".graphview-cc-help") as HTMLElement;
+        this.equationHelpEl = eq.head.querySelector<HTMLElement>(".graphview-cc-help");
 
         this.addQuery(c, "Node to apply Weight", "appliesTo");
 
@@ -225,7 +225,7 @@ export class CCNodeFactorSection extends Component {
             setIcon(add, "plus");
             add.createSpan({ text: "Add query" });
             setTooltip(add, "Add another query (a note counts if it matches any of them)");
-            add.onClickEvent(() => { rows.push(""); render(); (wrap.querySelectorAll("input") as NodeListOf<HTMLInputElement>)[rows.length - 1]?.focus(); });
+            add.onClickEvent(() => { rows.push(""); render(); wrap.querySelectorAll<HTMLInputElement>("input")[rows.length - 1]?.focus(); });
         };
         render();
     }

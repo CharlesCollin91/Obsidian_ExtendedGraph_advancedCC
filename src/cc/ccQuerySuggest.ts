@@ -3,7 +3,7 @@
  * Shows the operators on click; after "tag:" lists the vault tags; after "[" lists the
  * properties; after "file:" proposes the first symbols used in note names ("starts with").
  */
-import { AbstractInputSuggest, App, setIcon, setTooltip, TFile } from "obsidian";
+import { AbstractInputSuggest, App, setIcon, setTooltip } from "obsidian";
 
 interface Item {
     kind: "header" | "insert";
@@ -126,7 +126,7 @@ export class CCQuerySuggest extends AbstractInputSuggest<Item> {
 
     private propertyNames(): string[] {
         const names = new Set<string>();
-        for (const f of this.app.vault.getMarkdownFiles() as TFile[]) {
+        for (const f of this.app.vault.getMarkdownFiles()) {
             const fm = this.app.metadataCache.getFileCache(f)?.frontmatter;
             if (fm) Object.keys(fm).forEach(k => names.add(k));
         }

@@ -1,12 +1,12 @@
 /*
- * GraphView CC — the Extended Graph "Options" section of the graph panel, renamed "ExtendedGraph":
+ * GraphView CC — the Extended Graph "Options" section of the graph panel, renamed "Extended Graph":
  *  - on/off switch in its title (enables/disables Extended Graph on this graph view),
- *  - compact options (setting at the end of the plugin settings page).
+ *  - compact options, and the "Other settings" section at the end of the plugin settings page.
  */
 import { ExtraButtonComponent, setIcon, Setting, ToggleComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
 import { addHeaderToggle, HeaderToggle, renameSection } from "./ccPanel";
-import { CCSettings } from "./ccCompact";
+import { CCSettings } from "./ccSettings";
 import { CCLogger } from "./ccLogger";
 import { ExtendedGraphInstances } from "../internal";
 
@@ -65,7 +65,7 @@ export function addCCOtherSettings(container: HTMLElement): void {
     fold.onClick(() => { setCollapsed(!header.settingEl.hasClass("is-collapsed")); void CCSettings.save(); });
 
     // Nav entry ("Go to" bar), like the other sections
-    const nav = container.querySelector(".extended-graph-nav-settings") as HTMLElement | null;
+    const nav = container.querySelector<HTMLElement>(".extended-graph-nav-settings");
     if (nav) {
         const div = nav.createDiv();
         new ExtraButtonComponent(div).setIcon("settings-2").setTooltip("Other settings")
@@ -73,9 +73,9 @@ export function addCCOtherSettings(container: HTMLElement): void {
         div.appendText("Other");
     }
 
-    // ExtendedGraph panel: label + [Compact mode  (switch)] at the far right
+    // Extended Graph panel: label + [Compact mode  (switch)] at the far right
     const row = new Setting(container)
-        .setName("ExtendedGraph panel")
+        .setName("Extended Graph panel")
         .setDesc("On: show only essential options. Off: all options.");
     row.settingEl.addClass(OTHER_CLASS);
     const ctl = row.controlEl.createDiv({ cls: "toggle-labelled" });
@@ -89,4 +89,15 @@ export function addCCOtherSettings(container: HTMLElement): void {
             CCLogger.log("INFO", `ExtendedGraph panel: ${v ? "compact" : "full"} options`);
             refreshExtendedGraphSections();
         });
+
+    // Debug log (off by default)
+    const dbg = new Setting(container)
+        .setName("Debug log")
+        .setDesc("Writes one diagnostic file per session in the plugin folder (logs). Nothing leaves your computer.")
+        .addToggle(t => t.setValue(CCSettings.data.debugLog).onChange(async v => {
+            CCSettings.data.debugLog = v;
+            await CCSettings.save();
+            CCLogger.setEnabled(v);
+        }));
+    dbg.settingEl.addClass(OTHER_CLASS);
 }

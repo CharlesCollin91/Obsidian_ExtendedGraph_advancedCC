@@ -1,5 +1,0 @@
-Known bugs:
-
-- Toggling orphans off and orphans: nodes are doubled and one is inactive
-- Disabling links connected to unresolved nodes, disabling unresolved nodes, enabling unresolved nodes: links show up again
-- Toggling off and on unresolved nodes: links features (invert direction & flat arrows) are no longer active

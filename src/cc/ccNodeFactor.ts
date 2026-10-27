@@ -214,7 +214,7 @@ export class CCNodeFactor {
             const ws = [...this.cache.values()].map(r => r.W);
             CCLogger.log("INFO", `NodeFactor computed in ${(performance.now() - t0).toFixed(1)} ms: ${this.cache.size} nodes resized, W ${r2(ws.length ? Math.min(...ws) : 0)}…${r2(ws.length ? Math.max(...ws) : 0)} | ${formulaText(this.settings)}`);
         }
-        return this.cache ?? new Map();
+        return this.cache ?? new Map<string, NodeFactorResult>();
     }
 
     /** Sorted table for the log (self-test). */

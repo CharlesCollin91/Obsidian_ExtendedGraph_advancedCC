@@ -6,11 +6,11 @@
  * the search input holds the composed query, then it gets the user's text back). So the filtering is
  * done by Obsidian itself, with its full syntax (including content search).
  * engine.getOptions() is wrapped too, so states and graph.json keep only the user's main query.
- * Also renames the native "Groups" section to "Color by group".
  */
 import { debounce, setIcon, setTooltip, TextComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
-import { CCSettings } from "./ccCompact";
+import type { SearchEngineLike } from "./ccTypes";
+import { CCSettings } from "./ccSettings";
 import { CCLogger } from "./ccLogger";
 import { CCQuerySuggest } from "./ccQuerySuggest";
 
@@ -26,16 +26,14 @@ export function composeQuery(main: string, rows: FilterRow[]): string {
     return q;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Engine = any;
-const WRAPPED = "__graphviewCCFilterRows";
+type Engine = SearchEngineLike & { __graphviewCCFilterRows?: { origUpdate: SearchEngineLike["updateSearch"]; origGetOptions: SearchEngineLike["getOptions"] } };
 
 function wrapEngine(engine: Engine): void {
-    if (!engine || engine[WRAPPED]) return;
-    const input: HTMLInputElement | undefined = engine.filterOptions?.search?.inputEl;
+    if (engine.__graphviewCCFilterRows) return;
+    const input = engine.filterOptions?.search?.inputEl;
     if (!input) return;
     const origUpdate = engine.updateSearch, origGetOptions = engine.getOptions;
-    engine.updateSearch = function (...args: unknown[]) {
+    engine.updateSearch = function (this: unknown, ...args: unknown[]): unknown {
         const main = input.value;
         const composed = composeQuery(main, CCSettings.data.filterRows);
         if (composed === main) return origUpdate.apply(this, args);
@@ -43,28 +41,20 @@ function wrapEngine(engine: Engine): void {
         try { return origUpdate.apply(this, args); }
         finally { input.value = main; }
     };
-    engine.getOptions = function (...args: unknown[]) {
-        const o = origGetOptions.apply(this, args);
-        if (o && typeof o === "object" && "search" in o) o.search = input.value;   // never persist the composed query
+    engine.getOptions = function (this: unknown, ...args: unknown[]): unknown {
+        const o: unknown = origGetOptions.apply(this, args);
+        if (o && typeof o === "object" && "search" in o) (o as { search: string }).search = input.value; // never persist the composed query
         return o;
     };
-    engine[WRAPPED] = { origUpdate, origGetOptions };
+    engine.__graphviewCCFilterRows = { origUpdate, origGetOptions };
 }
 
 function unwrapEngine(engine: Engine): void {
-    const w = engine?.[WRAPPED];
+    const w = engine.__graphviewCCFilterRows;
     if (!w) return;
     engine.updateSearch = w.origUpdate;
     engine.getOptions = w.origGetOptions;
-    delete engine[WRAPPED];
-}
-
-/** Renames the native "Groups" section header. */
-export function renameGroupsSection(view: GraphView | LocalGraphView): void {
-    const headers = Array.from(view.contentEl.querySelectorAll(".graph-control-section .graph-control-section-header")) as HTMLElement[];
-    const h = (view.contentEl.querySelector(".graph-control-section.mod-color-groups .graph-control-section-header") as HTMLElement | null)
-        ?? headers.find(x => ["Groups", "Color by group"].includes(x.textContent?.trim() ?? ""));
-    if (h) h.textContent = "Node Color";
+    delete engine.__graphviewCCFilterRows;
 }
 
 const saveAndLog = debounce(() => {
@@ -77,7 +67,7 @@ export class CCFilterRows {
     private static live = new Set<CCFilterRows>();
     static disableAll(): void { for (const r of [...this.live]) r.disable(); }
     private holder: HTMLElement | null = null;
-    private engine: Engine = null;
+    private engine: Engine | null = null;
 
     constructor(private view: GraphView | LocalGraphView) { }
 
@@ -95,7 +85,7 @@ export class CCFilterRows {
         this.holder = null;
         if (this.engine) {
             unwrapEngine(this.engine);
-            this.engine.updateSearch?.();
+            this.engine.updateSearch();
             this.engine = null;
         }
     }
@@ -106,8 +96,8 @@ export class CCFilterRows {
     }
 
     private render(): void {
-        const input: HTMLInputElement | undefined = this.engine?.filterOptions?.search?.inputEl;
-        const anchor = (input?.closest(".setting-item") ?? input?.closest(".search-input-container")?.parentElement) as HTMLElement | null;
+        const input = this.engine?.filterOptions?.search?.inputEl;
+        const anchor = input?.closest<HTMLElement>(".setting-item") ?? input?.closest(".search-input-container")?.parentElement ?? null;
         if (!anchor) { CCLogger.log("WARN", "Filter rows: native search box not found"); return; }
         anchor.parentElement?.querySelectorAll(":scope > .graphview-cc-filter-rows").forEach(el => el.remove());
         this.holder = createDiv({ cls: "graphview-cc-filter-rows" });
@@ -143,7 +133,7 @@ export class CCFilterRows {
         add.onClickEvent(() => {
             rows.push({ op: "AND", query: "" });
             this.draw();
-            (h.querySelectorAll("input") as NodeListOf<HTMLInputElement>)[rows.length - 1]?.focus();
+            h.querySelectorAll<HTMLInputElement>("input")[rows.length - 1]?.focus();
         });
     }
 }

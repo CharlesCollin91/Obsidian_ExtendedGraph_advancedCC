@@ -1,6 +1,6 @@
 /*
  * GraphView CC — layout of the graph controls panel:
- *   order:  Filters · Node Color · Node Weight · Node level · Node Repartition · Extended Graph · (others) · Options
+ *   order:  Filters · Node Color · Node Repartition · Node Weight · Node level · Extended Graph · (others) · Options
  *   Node Repartition = native "Display" + "Forces" merged (one title, both contents; folding together)
  *   renames: Groups -> Node Color, Display -> Node Repartition (ExtendedGraph/NodeFactor/OptionCC renamed where created)
  *   "Options" = new empty section, last, for future settings.
@@ -21,15 +21,25 @@ function header(section: Element): HTMLElement | null {
 
 /** Native section by class, or by its (original or already renamed) title. */
 function findNative(controls: HTMLElement, key: keyof typeof NATIVE, renamed?: string): HTMLElement | null {
-    const byCls = controls.querySelector(`:scope > .graph-control-section.${NATIVE[key].cls}`) as HTMLElement | null;
+    const byCls = controls.querySelector<HTMLElement>(`:scope > .graph-control-section.${NATIVE[key].cls}`);
     if (byCls) return byCls;
-    const all = Array.from(controls.querySelectorAll(":scope > .graph-control-section")) as HTMLElement[];
+    const all = Array.from(controls.querySelectorAll<HTMLElement>(":scope > .graph-control-section"));
     return all.find(s => { const t = header(s)?.textContent?.trim(); return t === NATIVE[key].title || (!!renamed && t === renamed); }) ?? null;
 }
 
 function setTitle(section: HTMLElement | null, title: string): void {
     const h = section ? header(section) : null;
     if (h && h.textContent !== title) h.textContent = title;
+}
+
+/** Adds an icon in a native section title (native sections have none), like our sections. */
+function addHeaderIcon(section: HTMLElement, icon: string): void {
+    const self = section.querySelector<HTMLElement>(":scope > .tree-item-self");
+    if (!self || self.querySelector(":scope > .graphview-cc-header-icon")) return;
+    const el = createDiv("tree-item-header-icon graphview-cc-header-icon");
+    setIcon(el, icon);
+    const inner = self.querySelector(":scope > .tree-item-inner");
+    self.insertBefore(el, inner ?? null);
 }
 
 const isCollapsed = (s: HTMLElement) => s.hasClass("is-collapsed");
@@ -42,7 +52,7 @@ function mergeDisplayForces(display: HTMLElement, forces: HTMLElement): void {
     (display as HTMLElement & { ccMerged?: boolean }).ccMerged = true;
     const sync = () => {
         if (isCollapsed(display) !== isCollapsed(forces)) {
-            (forces.querySelector(":scope > .tree-item-self") as HTMLElement | null)?.click();
+            forces.querySelector<HTMLElement>(":scope > .tree-item-self")?.click();
         }
     };
     display.querySelector(":scope > .tree-item-self")?.addEventListener("click", () => window.setTimeout(sync, 0));
@@ -75,7 +85,7 @@ export class CCOptionsSection extends Component {
 
 /** Applies names, merge and order. Safe to call often (idempotent). */
 export function applyPanelLayout(view: GraphView | LocalGraphView): void {
-    const controls = view.contentEl.querySelector(".graph-controls") as HTMLElement | null;
+    const controls = view.contentEl.querySelector<HTMLElement>(".graph-controls");
     if (!controls) return;
     const filter = findNative(controls, "filter");
     const groups = findNative(controls, "groups", "Node Color") ?? findNative(controls, "groups", "Color by group");
@@ -84,16 +94,17 @@ export function applyPanelLayout(view: GraphView | LocalGraphView): void {
     setTitle(groups, "Node Color");
     setTitle(display, "Node Repartition");
     if (display && forces) mergeDisplayForces(display, forces);
+    if (display) addHeaderIcon(display, "orbit");
 
-    const q = (cls: string) => controls.querySelector(`:scope > .${cls}`) as HTMLElement | null;
+    const q = (cls: string) => controls.querySelector<HTMLElement>(`:scope > .${cls}`);
     const ordered = [
         filter, groups,
-        q("mod-graphview-cc-nodefactor"), q("mod-graphview-cc-optioncc"),
         display, forces,
+        q("mod-graphview-cc-nodefactor"), q("mod-graphview-cc-optioncc"),
         q("mod-extended-graph-options"),
     ].filter((x): x is HTMLElement => !!x);
     const options = q("mod-graphview-cc-options");
-    const sections = Array.from(controls.querySelectorAll(":scope > .graph-control-section")) as HTMLElement[];
+    const sections = Array.from(controls.querySelectorAll<HTMLElement>(":scope > .graph-control-section"));
     const others = sections.filter(s => !ordered.includes(s) && s !== options);
     const first = sections[0];
     if (!first) return;

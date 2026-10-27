@@ -6,25 +6,12 @@
  * Compact mode OFF -> everything is shown (Extended Graph default).
  * Hiding never changes a value: a hidden feature keeps working.
  *
- * Stored in <plugin folder>/cc-settings.json (never shipped by a delivery).
+ * Pins and the switch are stored in CCSettings (cc-settings.json).
  */
-import { ExtraButtonComponent, Plugin } from "obsidian";
+import { ExtraButtonComponent } from "obsidian";
 import { CCLogger } from "./ccLogger";
-import { NodeFactorSettings, normalizeNodeFactor } from "./ccNodeFactor";
-import { OPTIONCC_DEFAULTS, OptionCCSettings } from "./ccOptionCC";
-import type { FilterRow } from "./ccFilterRows";
-
-interface CCSettingsData {
-    compactMode: boolean;
-    pinnedGroups: string[];
-    nodeFactor: NodeFactorSettings;
-    egPanelCompact: boolean;   // ExtendedGraph section of the graph panel: compact options only
-    otherCollapsed: boolean;   // "Other settings" section folded
-    optionCC: OptionCCSettings; // local-graph options for the global graph
-    filterRows: FilterRow[];    // extra queries under the Filters search box
-}
-
-const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: normalizeNodeFactor(undefined), egPanelCompact: false, otherCollapsed: true, optionCC: { ...OPTIONCC_DEFAULTS }, filterRows: [] };
+import { CCSettings } from "./ccSettings";
+import type { EGSettingsView } from "./ccTypes";
 
 /** Section id -> feature keys in settings.enableFeatures (used for the "with features ON" counter). */
 const SECTION_FEATURES: Record<string, string[]> = {
@@ -44,55 +31,17 @@ interface Group {
     pin: ExtraButtonComponent;
 }
 
-export class CCSettings {
-    static data: CCSettingsData = { ...DEFAULTS, nodeFactor: normalizeNodeFactor(undefined), optionCC: { ...OPTIONCC_DEFAULTS }, filterRows: [] };
-    private static plugin: Plugin | null = null;
-
-    static async load(plugin: Plugin): Promise<void> {
-        this.plugin = plugin;
-        try {
-            const p = this.path();
-            if (p && await plugin.app.vault.adapter.exists(p)) {
-                const raw = JSON.parse(await plugin.app.vault.adapter.read(p));
-                this.data = { ...DEFAULTS, ...raw, nodeFactor: normalizeNodeFactor(raw.nodeFactor), optionCC: { ...OPTIONCC_DEFAULTS, ...(raw.optionCC ?? {}) }, filterRows: Array.isArray(raw.filterRows) ? raw.filterRows : [] };
-            }
-            CCLogger.log("INIT", `compact mode=${this.data.compactMode ? "ON" : "OFF"}, pinned=[${this.data.pinnedGroups.join(", ")}]`);
-            CCLogger.log("INIT", `OptionCC: ${JSON.stringify(this.data.optionCC)}`);
-            CCLogger.log("INIT", `ExtendedGraph panel: ${this.data.egPanelCompact ? "compact" : "full"} options`);
-            CCLogger.log("INIT", `NodeFactor ${this.data.nodeFactor.enabled ? "ON" : "OFF"}: ${JSON.stringify(this.data.nodeFactor)}`);
-        } catch (e) {
-            this.data = { ...DEFAULTS, nodeFactor: normalizeNodeFactor(undefined), optionCC: { ...OPTIONCC_DEFAULTS }, filterRows: [] };
-            CCLogger.error("cc-settings.json load failed (defaults used)", e);
-        }
-    }
-
-    static async save(): Promise<void> {
-        try {
-            const p = this.path();
-            if (p && this.plugin) await this.plugin.app.vault.adapter.write(p, JSON.stringify(this.data, null, 2));
-        } catch (e) {
-            CCLogger.error("cc-settings.json save failed", e);
-        }
-    }
-
-    private static path(): string | null {
-        return this.plugin?.manifest.dir ? `${this.plugin.manifest.dir}/cc-settings.json` : null;
-    }
-}
-
 export class CCCompact {
     private static groups: Group[] = [];
     private static container: HTMLElement | null = null;
     private static counterEl: HTMLElement | null = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static settings: any = null;
+    private static settings: EGSettingsView | null = null;
 
     /** Call at the start of the settings tab display(). */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static begin(container: HTMLElement, settings: any, counterEl: HTMLElement): void {
+    static begin(container: HTMLElement, settings: EGSettingsView | undefined, counterEl: HTMLElement): void {
         this.groups = [];
         this.container = container;
-        this.settings = settings;
+        this.settings = settings ?? null;
         this.counterEl = counterEl;
     }
 
@@ -121,7 +70,7 @@ export class CCCompact {
         }
 
         if (!withPin || this.groups.some(g => g.id === id)) return; // fixed group, or alias sub-section
-        const host = fresh[0].querySelector(".setting-item-control") as HTMLElement | null ?? fresh[0];
+        const host = fresh[0].querySelector<HTMLElement>(".setting-item-control") ?? fresh[0];
         const holder = createDiv({ cls: "graphview-cc-pin-holder" });
         host.prepend(holder);
         const pin = new ExtraButtonComponent(holder)
@@ -141,8 +90,8 @@ export class CCCompact {
         let hidden = 0, hiddenActive = 0;
         for (const g of this.groups) {
             const show = !compact || this.isPinned(g.id);
-            const els = Array.from(container.querySelectorAll(`[data-cc-group="${g.id}"], .setting-${g.id}`)) as HTMLElement[];
-            if (g.id === "properties") els.push(...Array.from(container.querySelectorAll(".setting-property-key")) as HTMLElement[]);
+            const els = Array.from(container.querySelectorAll<HTMLElement>(`[data-cc-group="${g.id}"], .setting-${g.id}`));
+            if (g.id === "properties") els.push(...Array.from(container.querySelectorAll<HTMLElement>(".setting-property-key")));
             els.forEach(el => el.toggleClass("graphview-cc-hidden", !show));
             if (!show) {
                 hidden++;
@@ -194,6 +143,6 @@ export class CCCompact {
     }
 
     private static nav(): HTMLElement | null {
-        return this.container?.querySelector(`.${NAV_CLASS}`) as HTMLElement | null;
+        return this.container?.querySelector<HTMLElement>(`.${NAV_CLASS}`) ?? null;
     }
 }

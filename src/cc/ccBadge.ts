@@ -4,10 +4,11 @@
  */
 import { ToggleComponent } from "obsidian";
 import { CCLogger, CC_VERSION } from "./ccLogger";
-import { CCCompact, CCSettings } from "./ccCompact";
+import type { EGSettingsView } from "./ccTypes";
+import { CCCompact } from "./ccCompact";
+import { CCSettings } from "./ccSettings";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function addCCVersionBadge(container: HTMLElement, settings?: any): void {
+export function addCCVersionBadge(container: HTMLElement, settings?: EGSettingsView): void {
     const badge = container.createDiv({ cls: "graphview-cc-badge" });
 
     const top = badge.createDiv({ cls: "graphview-cc-badge-row" });
@@ -19,12 +20,12 @@ export function addCCVersionBadge(container: HTMLElement, settings?: any): void 
     sw.createSpan({ text: "Compact mode" });
     new ToggleComponent(sw)
         .setValue(CCSettings.data.compactMode)
-        .setTooltip("ON: show only pinned groups. OFF: show everything.")
+        .setTooltip("On: show only pinned groups. Off: show everything.")
         .onChange(v => void CCCompact.setCompact(v));
 
     const counter = badge.createDiv({ cls: "graphview-cc-badge-counter" });
     const file = CCLogger.logFile;
-    badge.createDiv({ cls: "graphview-cc-badge-log", text: file ? `Session log: ${file}` : "Session log: disabled" });
+    if (file) badge.createDiv({ cls: "graphview-cc-badge-log", text: `Debug log: ${file}` });
 
     CCCompact.begin(container, settings, counter);
 }
