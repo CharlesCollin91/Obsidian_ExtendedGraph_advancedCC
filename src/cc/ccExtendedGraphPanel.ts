@@ -3,7 +3,7 @@
  *  - on/off switch in its title (enables/disables Extended Graph on this graph view),
  *  - compact options (setting at the end of the plugin settings page).
  */
-import { Setting } from "obsidian";
+import { ExtraButtonComponent, setIcon, Setting, ToggleComponent } from "obsidian";
 import { GraphView, LocalGraphView } from "obsidian-typings";
 import { addHeaderToggle, HeaderToggle, renameSection } from "./ccPanel";
 import { CCSettings } from "./ccCompact";
@@ -40,16 +40,53 @@ export function refreshExtendedGraphSections(): void {
     }
 }
 
-/** Block at the end of the plugin settings page. */
-export function addCCPanelSettings(container: HTMLElement): void {
-    new Setting(container).setName("Graph panel (GraphView CC)").setHeading();
-    new Setting(container)
-        .setName("ExtendedGraph section: compact options")
-        .setDesc("ON: the ExtendedGraph section of the graph panel only shows Save for default state, Save for native state, Unpin all nodes and Pin multiple nodes. OFF: all options.")
-        .addToggle(t => t.setValue(CCSettings.data.egPanelCompact).onChange(async v => {
+const OTHER_ID = "cc-other";
+const OTHER_CLASS = `setting-${OTHER_ID}`;
+
+/**
+ * "Other settings" section at the end of the plugin settings page, built like the
+ * Extended Graph sections (heading + fold chevron + nav entry; compact-mode pin added by CCCompact).
+ * Returns the number of nav entries before it (for CCCompact.mark).
+ */
+export function addCCOtherSettings(container: HTMLElement): void {
+    // Heading
+    const header = new Setting(container).setName("Other settings").setHeading();
+    header.settingEl.addClass(OTHER_CLASS);
+    const iconEl = createDiv();
+    header.settingEl.prepend(iconEl);
+    setIcon(iconEl, "settings-2");
+    const fold = new ExtraButtonComponent(header.nameEl).setIcon("chevron-right");
+    fold.extraSettingsEl.addClass("setting-header-fold-icon");
+    const setCollapsed = (c: boolean) => {
+        header.settingEl.toggleClass("is-collapsed", c);
+        CCSettings.data.otherCollapsed = c;
+    };
+    setCollapsed(CCSettings.data.otherCollapsed);
+    fold.onClick(() => { setCollapsed(!header.settingEl.hasClass("is-collapsed")); void CCSettings.save(); });
+
+    // Nav entry ("Go to" bar), like the other sections
+    const nav = container.querySelector(".extended-graph-nav-settings") as HTMLElement | null;
+    if (nav) {
+        const div = nav.createDiv();
+        new ExtraButtonComponent(div).setIcon("settings-2").setTooltip("Other settings")
+            .onClick(() => header.settingEl.scrollIntoView());
+        div.appendText("Other");
+    }
+
+    // ExtendedGraph panel: label + [Compact mode  (switch)] at the far right
+    const row = new Setting(container)
+        .setName("ExtendedGraph panel")
+        .setDesc("On: show only essential options. Off: all options.");
+    row.settingEl.addClass(OTHER_CLASS);
+    const ctl = row.controlEl.createDiv({ cls: "toggle-labelled" });
+    ctl.createSpan({ text: "Compact mode" });
+    new ToggleComponent(ctl)
+        .setValue(CCSettings.data.egPanelCompact)
+        .setTooltip("On: show only essential options. Off: all options.")
+        .onChange(async v => {
             CCSettings.data.egPanelCompact = v;
             await CCSettings.save();
             CCLogger.log("INFO", `ExtendedGraph panel: ${v ? "compact" : "full"} options`);
             refreshExtendedGraphSections();
-        }));
+        });
 }

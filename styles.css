@@ -1527,3 +1527,6 @@ svg.shape-svg {
     overflow-y: auto;
 }
 .graphview-cc-nf-equation .graphview-cc-nf-label { font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-accent); }
+
+/* [CC] "Other settings" section folds like the Extended Graph sections */
+.extended-graph-settings .setting-item-heading.setting-cc-other.is-collapsed ~ .setting-cc-other { display: none; }

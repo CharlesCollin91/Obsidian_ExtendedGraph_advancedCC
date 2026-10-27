@@ -17,12 +17,14 @@ interface CCSettingsData {
     pinnedGroups: string[];
     nodeFactor: NodeFactorSettings;
     egPanelCompact: boolean;   // ExtendedGraph section of the graph panel: compact options only
+    otherCollapsed: boolean;   // "Other settings" section folded
 }
 
-const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: normalizeNodeFactor(undefined), egPanelCompact: false };
+const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: normalizeNodeFactor(undefined), egPanelCompact: false, otherCollapsed: true };
 
 /** Section id -> feature keys in settings.enableFeatures (used for the "with features ON" counter). */
 const SECTION_FEATURES: Record<string, string[]> = {
+    "cc-other": [],
     "images": ["imagesFromProperty", "imagesFromEmbeds", "imagesForAttachments"],
     "links": ["links", "linksSameColorAsNode"],
 };
