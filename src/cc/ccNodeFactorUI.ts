@@ -18,18 +18,23 @@ type QueryKey = "appliesTo" | "queryX" | "queryY";
 
 const HELP = {
     enable: "Turns the formula on/off. OFF = Obsidian's native node sizes.",
-    formula: "Live formula. X and Y are counted on the whole vault, in both link directions.",
-    appliesTo: "Which nodes get resized. Others keep their native size. Same syntax as Groups.",
-    queryX: "X = number of linked notes matching this query (books, reflections…).",
-    a: "Weight of X. 0 = X ignored.",
-    queryY: "Y = number of linked notes matching this query (other themes).",
-    b: "Weight of Y. 0 = Y ignored.",
-    contrast: "Contrast between nodes. 0 = all equal, 0.5 = square root, 1 = linear.",
-    base: "Size of a node with W = 0.",
-    min: "Smallest allowed size.",
-    max: "Largest allowed size.",
-    top: "The 5 biggest nodes with their X, Y, W and final size.",
+    appliesTo: "Which nodes get resized (same syntax as Groups). Others keep their native size.",
+    queryX: "Factor 1 = number of linked notes matching this query (e.g. books, reflections: -file:=).",
+    a: "Weight of Factor 1. 0 = ignored.",
+    queryY: "Factor 2 = number of linked notes matching this query (e.g. other themes: file:=).",
+    b: "Weight of Factor 2. 0 = ignored.",
+    base: "Size of a node with no links (W = 0).",
+    contrast: "0 = all nodes equal, 0.5 = square root, 1 = linear (strong hierarchy).",
+    min: "Smallest allowed node size.",
+    max: "Largest allowed node size.",
 };
+
+function equationHelp(s: NodeFactorSettings): string {
+    const f = (n: number) => Number(n.toFixed(2)).toString();
+    return `size = ${f(s.base)} × (1 + ${f(s.a)}·F1 + ${f(s.b)}·F2)^${f(s.contrast)}\n` +
+        `bounded between ${f(s.min)} and ${f(s.max)}\n` +
+        `F1, F2 = linked notes matching each query, counted on the whole vault, both link directions.`;
+}
 
 /** Redraw every open graph view (sizes are read again at the next frame). */
 function redrawGraphs(): void {
@@ -57,8 +62,7 @@ export class CCNodeFactorSection extends Component {
     private collapseIcon: HTMLElement;
     private isCollapsed = true;
     private enabled = false;
-    private formulaEl: HTMLElement | null = null;
-    private topEl: HTMLElement | null = null;
+    private equationHelpEl: HTMLElement | null = null;
 
     constructor(view: GraphView | LocalGraphView) {
         super();
@@ -124,30 +128,27 @@ export class CCNodeFactorSection extends Component {
             s.enabled = v;
             CCLogger.log("INFO", `NodeFactor ${v ? "ON" : "OFF"}`);
             this.changed("enabled");
-            this.refreshInfo();
         });
 
-        // Formula
-        const fr = c.createDiv({ cls: "graphview-cc-nf-formula-row" });
-        this.formulaEl = fr.createDiv({ cls: "graphview-cc-nf-formula" });
-        helpIcon(fr, HELP.formula);
+        // Equation: only in the (?) tooltip, kept up to date
+        const eq = this.row(c, "Equation for hierarchy", equationHelp(s));
+        this.equationHelpEl = eq.head.querySelector(".graphview-cc-help") as HTMLElement;
 
         this.addQuery(c, "Applies to", "appliesTo");
-        this.group(c, "X · notes feeders");
-        this.addQuery(c, "Query X", "queryX");
-        this.addSlider(c, "a · weight of X", "a", 0, 5, 0.1);
-        this.group(c, "Y · linked themes");
-        this.addQuery(c, "Query Y", "queryY");
-        this.addSlider(c, "b · weight of Y", "b", 0, 5, 0.1);
-        this.group(c, "Shape of the curve");
-        this.addSlider(c, "p · contrast", "contrast", 0, 1.5, 0.05);
-        this.addSlider(c, "Base size", "base", 1, 30, 0.5);
-        this.addSlider(c, "Min size", "min", 1, 50, 1);
-        this.addSlider(c, "Max size", "max", 10, 200, 5);
 
-        const top = this.row(c, "Top 5", HELP.top);
-        this.topEl = top.body.createDiv({ cls: "graphview-cc-nf-top" });
-        this.refreshInfo();
+        this.group(c, "Factor 1", HELP.queryX);
+        this.addQuery(c, "", "queryX");
+        this.addSlider(c, "Multiplier", "a", 0, 5, 0.1);
+
+        this.group(c, "Factor 2", HELP.queryY);
+        this.addQuery(c, "", "queryY");
+        this.addSlider(c, "Multiplier", "b", 0, 5, 0.1);
+
+        this.group(c, "Emphasis");
+        this.addSlider(c, "Base size node", "base", 0.5, 30, 0.5);
+        this.addSlider(c, "Contrast between nodes", "contrast", 0, 1.5, 0.05);
+        this.addSlider(c, "Min size node", "min", 0.5, 50, 0.5);
+        this.addSlider(c, "Max size node", "max", 10, 200, 5);
     }
 
     /** One full-width row: header (label + help + optional inline control) and a body below. */
@@ -161,13 +162,15 @@ export class CCNodeFactorSection extends Component {
         return { head, body };
     }
 
-    private group(c: HTMLElement, title: string): void {
-        c.createDiv({ cls: "graphview-cc-nf-group", text: title });
+    private group(c: HTMLElement, title: string, help?: string): void {
+        const g = c.createDiv({ cls: "graphview-cc-nf-group" });
+        g.createSpan({ text: title });
+        if (help) helpIcon(g, help);
     }
 
     private addQuery(c: HTMLElement, label: string, key: QueryKey): void {
         const s = CCNodeFactor.settings;
-        const { body } = this.row(c, label, HELP[key]);
+        const body = label ? this.row(c, label, HELP[key]).body : c.createDiv({ cls: "graphview-cc-nf-row graphview-cc-nf-body" });
         const text = new TextComponent(body).setPlaceholder("empty = all notes").setValue(s[key]);
         text.inputEl.addClass("graphview-cc-nf-input");
         const commit = debounce((v: string) => {
@@ -195,27 +198,9 @@ export class CCNodeFactorSection extends Component {
 
     private changed(reason: string): void {
         CCNodeFactor.invalidate(reason);
-        this.refreshInfo();
+        if (this.equationHelpEl) setTooltip(this.equationHelpEl, equationHelp(CCNodeFactor.settings), { placement: "left" });
         saveAndLog();
         redrawGraphs();
-    }
-
-    private refreshInfo(): void {
-        const s: NodeFactorSettings = CCNodeFactor.settings;
-        this.formulaEl?.setText(formulaText(s));
-        if (!this.topEl) return;
-        this.topEl.empty();
-        if (!s.enabled) {
-            this.topEl.setText("NodeFactor is OFF: native sizes.");
-            return;
-        }
-        const rows = [...CCNodeFactor.results().values()].sort((p, q) => q.W - p.W);
-        this.topEl.createDiv({ cls: "graphview-cc-nf-top-title", text: `${rows.length} nodes resized` });
-        for (const r of rows.slice(0, 5)) {
-            const line = this.topEl.createDiv({ cls: "graphview-cc-nf-top-line" });
-            line.createDiv({ cls: "graphview-cc-nf-top-name", text: r.name });
-            line.createDiv({ cls: "graphview-cc-nf-top-nums", text: `X ${r.X} · Y ${r.Y} · W ${this.fmt(r.W, 0.1)} · size ${r.size.toFixed(1)}` });
-        }
     }
 
     private fmt(v: number, step: number): string {

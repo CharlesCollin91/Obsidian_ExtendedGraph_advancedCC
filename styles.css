@@ -1479,8 +1479,10 @@ svg.shape-svg {
 .graphview-cc-nf-value { font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-accent); min-width: 2.8em; text-align: right; }
 .graphview-cc-help { display: inline-flex; color: var(--text-faint); cursor: help; flex: 0 0 auto; }
 .graphview-cc-help svg { width: 13px; height: 13px; }
+.graphview-cc-nf-group .graphview-cc-help { text-transform: none; }
 .graphview-cc-help:hover { color: var(--text-accent); }
 .graphview-cc-nf-group {
+    display: flex; align-items: center; gap: 4px;
     margin-top: 10px; padding-top: 6px;
     border-top: 1px solid var(--background-modifier-border);
     font-size: var(--font-ui-smaller); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
