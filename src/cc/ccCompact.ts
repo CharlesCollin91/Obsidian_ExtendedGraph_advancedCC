@@ -10,13 +10,15 @@
  */
 import { ExtraButtonComponent, Plugin } from "obsidian";
 import { CCLogger } from "./ccLogger";
+import { NODEFACTOR_DEFAULTS, NodeFactorSettings } from "./ccNodeFactor";
 
 interface CCSettingsData {
     compactMode: boolean;
     pinnedGroups: string[];
+    nodeFactor: NodeFactorSettings;
 }
 
-const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [] };
+const DEFAULTS: CCSettingsData = { compactMode: false, pinnedGroups: [], nodeFactor: { ...NODEFACTOR_DEFAULTS } };
 
 /** Section id -> feature keys in settings.enableFeatures (used for the "with features ON" counter). */
 const SECTION_FEATURES: Record<string, string[]> = {
@@ -36,7 +38,7 @@ interface Group {
 }
 
 export class CCSettings {
-    static data: CCSettingsData = { ...DEFAULTS };
+    static data: CCSettingsData = { ...DEFAULTS, nodeFactor: { ...NODEFACTOR_DEFAULTS } };
     private static plugin: Plugin | null = null;
 
     static async load(plugin: Plugin): Promise<void> {
@@ -45,11 +47,12 @@ export class CCSettings {
             const p = this.path();
             if (p && await plugin.app.vault.adapter.exists(p)) {
                 const raw = JSON.parse(await plugin.app.vault.adapter.read(p));
-                this.data = { ...DEFAULTS, ...raw };
+                this.data = { ...DEFAULTS, ...raw, nodeFactor: { ...NODEFACTOR_DEFAULTS, ...(raw.nodeFactor ?? {}) } };
             }
             CCLogger.log("INIT", `compact mode=${this.data.compactMode ? "ON" : "OFF"}, pinned=[${this.data.pinnedGroups.join(", ")}]`);
+            CCLogger.log("INIT", `NodeFactor ${this.data.nodeFactor.enabled ? "ON" : "OFF"}: ${JSON.stringify(this.data.nodeFactor)}`);
         } catch (e) {
-            this.data = { ...DEFAULTS };
+            this.data = { ...DEFAULTS, nodeFactor: { ...NODEFACTOR_DEFAULTS } };
             CCLogger.error("cc-settings.json load failed (defaults used)", e);
         }
     }

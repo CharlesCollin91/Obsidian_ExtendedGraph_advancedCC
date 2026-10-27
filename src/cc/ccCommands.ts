@@ -3,6 +3,7 @@
  */
 import { Notice, Plugin } from "obsidian";
 import { CCLogger, CC_VERSION } from "./ccLogger";
+import { CCNodeFactor } from "./ccNodeFactor";
 
 export function addCCCommands(plugin: Plugin): void {
     plugin.addCommand({
@@ -11,6 +12,15 @@ export function addCCCommands(plugin: Plugin): void {
         callback: () => {
             const file = CCLogger.selfTest();
             new Notice(`GraphView CC v${CC_VERSION}: self-test written to\n${file}`, 8000);
+        },
+    });
+
+    plugin.addCommand({
+        id: "cc-nodefactor-table",
+        name: "NodeFactor: write table to log",
+        callback: () => {
+            CCLogger.log("TEST", CCNodeFactor.table());
+            new Notice(`GraphView CC: NodeFactor table (${CCNodeFactor.results().size} nodes) written to the session log`, 6000);
         },
     });
 

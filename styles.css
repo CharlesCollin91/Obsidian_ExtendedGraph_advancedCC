@@ -1465,3 +1465,24 @@ svg.shape-svg {
 .graphview-cc-pin:hover { opacity: 1; }
 .graphview-cc-pin.is-pinned { color: var(--interactive-accent); opacity: 1; }
 .graphview-cc-pin.is-pinned svg { fill: currentColor; }
+
+/* [CC] NodeFactor section (graph controls panel) */
+.graphview-cc-nodefactor .setting-item { padding: 6px 0; }
+.graphview-cc-nf-formula {
+    font-family: var(--font-monospace);
+    font-size: var(--font-ui-smaller);
+    background: var(--background-secondary);
+    border-left: 3px solid var(--interactive-accent);
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin: 4px 0 6px 0;
+    word-break: break-word;
+}
+.graphview-cc-nf-query { flex-wrap: wrap; }
+.graphview-cc-nf-query .setting-item-control { flex: 1 1 100%; }
+.graphview-cc-nf-query input[type="text"] { width: 100%; font-family: var(--font-monospace); }
+.graphview-cc-invalid { border-color: var(--text-error) !important; box-shadow: 0 0 0 1px var(--text-error); }
+.graphview-cc-nf-value { min-width: 3em; text-align: right; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-muted); }
+.graphview-cc-nf-top { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+.graphview-cc-nf-top-title { font-weight: 600; color: var(--text-normal); }
+.graphview-cc-nf-note { font-size: var(--font-ui-small); color: var(--text-muted); padding: 6px 0; }

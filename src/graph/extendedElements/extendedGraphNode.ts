@@ -26,6 +26,7 @@ import {
 } from "../../internal";
 import * as Color from '../../colors/color-bits';
 
+import { CCNodeFactor } from "../../cc/ccNodeFactor"; // [CC]
 export abstract class ExtendedGraphNode extends ExtendedGraphElement<GraphNode> {
     graphicsWrapper?: NodeGraphicsWrapper;
     isPinned: boolean = false;
@@ -77,7 +78,8 @@ export abstract class ExtendedGraphNode extends ExtendedGraphElement<GraphNode> 
     }
 
     private proxyGetSize() {
-        if (!(this.graphicsWrapper && this.graphicsWrapper.shape !== ShapeEnum.CIRCLE)
+        // [CC] NodeFactor ON -> always hook the size
+        if (!CCNodeFactor.isEnabled() && !(this.graphicsWrapper && this.graphicsWrapper.shape !== ShapeEnum.CIRCLE)
             && (this.radius === NodeShape.RADIUS)
             && !(this.instances.settings.enableFeatures[this.instances.type]["elements-stats"]
                 && this.instances.settings.nodesSizeFunction !== "default")) {
@@ -338,6 +340,8 @@ export abstract class ExtendedGraphNode extends ExtendedGraphElement<GraphNode> 
     getSizeWithoutScaling(): number {
         const customRadiusFactor = this.radius / NodeShape.RADIUS;
         const node = this.coreElement;
+        const ccSize = CCNodeFactor.sizeFor(this.id); // [CC]
+        if (ccSize !== undefined) return node.renderer.fNodeSizeMult * ccSize * customRadiusFactor; // [CC]
         if (this.instances.settings.enableFeatures[this.instances.type]['elements-stats'] && this.instances.settings.nodesSizeFunction !== 'default') {
             const originalSize = node.renderer.fNodeSizeMult * 8;
             const customFunctionFactor = (this.instances.nodesSizeCalculator ?? ExtendedGraphInstances.graphsManager.vaultStatsManager.nodesSizeCalculator)?.filesStats.get(this.id)?.value;
