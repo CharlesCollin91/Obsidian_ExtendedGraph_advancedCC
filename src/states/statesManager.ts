@@ -22,6 +22,7 @@ import {
 
 
 
+import { CCNodeFactor } from "../cc/ccNodeFactor"; // [CC]
 export class StatesManager {
     cacheStatesConfigs: { [stateID: string]: { filepath: string, settings: ExtendedGraphSettings } } = {};
 
@@ -88,6 +89,7 @@ export class StatesManager {
             }
 
             instances.layersManager?.setCurrentLevel(stateData.currentLayerLevel ?? 0, false);
+            CCNodeFactor.applyFromState(stateData.ccNodeFactor, stateData.name); // [CC]
 
             instances.legendUI?.updateUIFromState();
 
@@ -215,6 +217,7 @@ export class StatesManager {
         const engine = getEngine(view);
         if (!engine) return;
         stateData.engineOptions = new EngineOptions(engine.getOptions());
+        stateData.ccNodeFactor = CCNodeFactor.snapshot(); // [CC]
         await this.onStateNeedsSaving(stateData, true);
     }
 

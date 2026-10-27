@@ -1466,23 +1466,38 @@ svg.shape-svg {
 .graphview-cc-pin.is-pinned { color: var(--interactive-accent); opacity: 1; }
 .graphview-cc-pin.is-pinned svg { fill: currentColor; }
 
-/* [CC] NodeFactor section (graph controls panel) */
-.graphview-cc-nodefactor .setting-item { padding: 6px 0; }
-.graphview-cc-nf-formula {
-    font-family: var(--font-monospace);
-    font-size: var(--font-ui-smaller);
-    background: var(--background-secondary);
-    border-left: 3px solid var(--interactive-accent);
-    border-radius: 4px;
-    padding: 4px 6px;
-    margin: 4px 0 6px 0;
-    word-break: break-word;
+/* [CC] NodeFactor section (graph controls panel) — built for a narrow panel */
+.graphview-cc-nodefactor { padding-bottom: 8px; }
+.graphview-cc-nf-row { padding: 5px 0; }
+.graphview-cc-nf-head { display: flex; align-items: center; gap: 4px; min-height: 24px; }
+.graphview-cc-nf-label { font-size: var(--font-ui-small); color: var(--text-normal); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.graphview-cc-nf-spacer { flex: 1 1 auto; }
+.graphview-cc-nf-body { display: flex; }
+.graphview-cc-nf-body:empty { display: none; }
+.graphview-cc-nf-input { width: 100%; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); }
+.graphview-cc-nf-slider { width: 100%; }
+.graphview-cc-nf-value { font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-accent); min-width: 2.8em; text-align: right; }
+.graphview-cc-help { display: inline-flex; color: var(--text-faint); cursor: help; flex: 0 0 auto; }
+.graphview-cc-help svg { width: 13px; height: 13px; }
+.graphview-cc-help:hover { color: var(--text-accent); }
+.graphview-cc-nf-group {
+    margin-top: 10px; padding-top: 6px;
+    border-top: 1px solid var(--background-modifier-border);
+    font-size: var(--font-ui-smaller); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--text-muted);
 }
-.graphview-cc-nf-query { flex-wrap: wrap; }
-.graphview-cc-nf-query .setting-item-control { flex: 1 1 100%; }
-.graphview-cc-nf-query input[type="text"] { width: 100%; font-family: var(--font-monospace); }
+.graphview-cc-nf-formula-row { display: flex; align-items: flex-start; gap: 4px; margin: 4px 0 2px 0; }
+.graphview-cc-nf-formula {
+    flex: 1 1 auto;
+    font-family: var(--font-monospace); font-size: var(--font-ui-smaller);
+    background: var(--background-secondary);
+    border-left: 3px solid var(--interactive-accent); border-radius: 4px;
+    padding: 4px 6px; word-break: break-word;
+}
 .graphview-cc-invalid { border-color: var(--text-error) !important; box-shadow: 0 0 0 1px var(--text-error); }
-.graphview-cc-nf-value { min-width: 3em; text-align: right; font-family: var(--font-monospace); font-size: var(--font-ui-smaller); color: var(--text-muted); }
-.graphview-cc-nf-top { font-size: var(--font-ui-smaller); color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
-.graphview-cc-nf-top-title { font-weight: 600; color: var(--text-normal); }
+.graphview-cc-nf-top { width: 100%; font-size: var(--font-ui-smaller); color: var(--text-muted); line-height: 1.35; }
+.graphview-cc-nf-top-title { font-weight: 600; color: var(--text-normal); margin-bottom: 2px; }
+.graphview-cc-nf-top-line { padding: 2px 0; border-bottom: 1px dashed var(--background-modifier-border); }
+.graphview-cc-nf-top-name { color: var(--text-normal); }
+.graphview-cc-nf-top-nums { font-family: var(--font-monospace); }
 .graphview-cc-nf-note { font-size: var(--font-ui-small); color: var(--text-muted); padding: 6px 0; }

@@ -62,6 +62,8 @@ export interface VaultLinks {
     target(path: string): QueryTarget;
 }
 
+const r2 = (n: number) => Number(n.toFixed(2));
+
 export function nodeFactorSize(W: number, s: NodeFactorSettings): number {
     const raw = s.base * Math.pow(1 + Math.max(0, W), s.contrast);
     return Math.min(s.max, Math.max(s.min, raw));
@@ -149,6 +151,38 @@ export class CCNodeFactor {
         return !!this.app && this.settings.enabled;
     }
 
+    /** True once the plugin is loaded: node size hooks are then always installed, so NodeFactor
+     *  can be switched on/off live without resetting the graph. */
+    static isReady(): boolean {
+        return !!this.app;
+    }
+
+    private static listeners = new Set<() => void>();
+    static onChange(cb: () => void): () => void {
+        this.listeners.add(cb);
+        return () => this.listeners.delete(cb);
+    }
+    static notify(): void {
+        for (const cb of this.listeners) { try { cb(); } catch (e) { CCLogger.error("NodeFactor listener", e); } }
+    }
+
+    /** Copy saved in a graph state. */
+    static snapshot(): NodeFactorSettings {
+        return { ...this.settings };
+    }
+
+    /** Applies the NodeFactor saved in a graph state. Returns true if something changed. */
+    static applyFromState(saved: Partial<NodeFactorSettings> | undefined, stateName: string): boolean {
+        if (!saved) return false;
+        const next = { ...NODEFACTOR_DEFAULTS, ...saved };
+        if (JSON.stringify(next) === JSON.stringify(this.settings)) return false;
+        Object.assign(this.settings, next);
+        this.cache = null;
+        CCLogger.log("INFO", `NodeFactor loaded from state "${stateName}": ${formulaText(this.settings)}`);
+        this.notify();
+        return true;
+    }
+
     /** Called by the node size hook. undefined = keep the native size. */
     static sizeFor(id: string): number | undefined {
         if (!this.isEnabled()) return undefined;
@@ -157,7 +191,7 @@ export class CCNodeFactor {
 
     static invalidate(reason: string): void {
         this.cache = null;
-        CCLogger.log("INFO", `NodeFactor invalidated (${reason})`);
+        if (!reason.includes("=")) CCLogger.log("INFO", `NodeFactor invalidated (${reason})`); // slider moves stay quiet
     }
 
     static results(): Map<string, NodeFactorResult> {
@@ -165,7 +199,7 @@ export class CCNodeFactor {
             const t0 = performance.now();
             this.cache = computeNodeFactor(vaultLinksFromApp(this.app), this.settings);
             const ws = [...this.cache.values()].map(r => r.W);
-            CCLogger.log("INFO", `NodeFactor computed in ${(performance.now() - t0).toFixed(1)} ms: ${this.cache.size} nodes resized, W ${ws.length ? Math.min(...ws) : 0}…${ws.length ? Math.max(...ws) : 0} | ${formulaText(this.settings)}`);
+            CCLogger.log("INFO", `NodeFactor computed in ${(performance.now() - t0).toFixed(1)} ms: ${this.cache.size} nodes resized, W ${r2(ws.length ? Math.min(...ws) : 0)}…${r2(ws.length ? Math.max(...ws) : 0)} | ${formulaText(this.settings)}`);
         }
         return this.cache ?? new Map();
     }

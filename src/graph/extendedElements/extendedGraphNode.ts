@@ -78,8 +78,8 @@ export abstract class ExtendedGraphNode extends ExtendedGraphElement<GraphNode> 
     }
 
     private proxyGetSize() {
-        // [CC] NodeFactor ON -> always hook the size
-        if (!CCNodeFactor.isEnabled() && !(this.graphicsWrapper && this.graphicsWrapper.shape !== ShapeEnum.CIRCLE)
+        // [CC] always hook the size so NodeFactor can be toggled live
+        if (!CCNodeFactor.isReady() && !(this.graphicsWrapper && this.graphicsWrapper.shape !== ShapeEnum.CIRCLE)
             && (this.radius === NodeShape.RADIUS)
             && !(this.instances.settings.enableFeatures[this.instances.type]["elements-stats"]
                 && this.instances.settings.nodesSizeFunction !== "default")) {

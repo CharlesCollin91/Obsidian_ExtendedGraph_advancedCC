@@ -1,6 +1,7 @@
 import { GraphColorGroup, GraphPluginInstanceOptions } from "obsidian-typings";
 import { CombinationLogic, FOLDER_KEY, GraphInstances, LINK_KEY, TAG_KEY } from "../internal";
 
+import { NodeFactorSettings } from "../cc/ccNodeFactor"; // [CC]
 export class EngineOptions implements GraphPluginInstanceOptions {
     colorGroups?: GraphColorGroup[] = [];
     search?: string = "";
@@ -59,6 +60,7 @@ export class GraphStateData {
     collapsedLegendRows?: string[];
     enableLayers: boolean = false;
     currentLayerLevel: number = 0;
+    ccNodeFactor?: NodeFactorSettings; // [CC]
 
     constructor() {
         this.toggleTypes = {};
